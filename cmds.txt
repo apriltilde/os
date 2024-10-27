@@ -1,0 +1,7 @@
+gcc -m32 -ffreestanding -fno-stack-protector -c kernel.c -o kernel.o
+gcc -m32 -ffreestanding -fno-stack-protector -c lib/print.c -o print.o
+gcc -m32 -ffreestanding -fno-stack-protector -c lib/keyboard.c -o keyboard.o
+
+ld -m elf_i386 -T linker.ld -o kernel boot.o kernel.o print.o keyboard.o
+mv kernel aprilos/boot
+grub-mkrescue -o april.iso aprilos/
