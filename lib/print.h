@@ -22,6 +22,7 @@
 
 void print(int color, const char *str);
 void print_char(int color, char c);
+void clear(void);
 void newline();
 
 extern int cursor_pos;

@@ -7,13 +7,35 @@
 unsigned short *vga_buffer = (unsigned short *)VGA_ADDRESS;
 int cursor_pos = 0;
 
+// Function to clear the screen
+void clear() {
+    for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
+        vga_buffer[i] = ' ' | (WHITE << 8); // Fill with spaces and set color
+    }
+    cursor_pos = 0; // Reset cursor position to the top-left
+}
+
+// Function to scroll the screen up by one line
+void scroll() {
+    for (int i = 0; i < VGA_HEIGHT - 1; i++) {
+        for (int j = 0; j < VGA_WIDTH; j++) {
+            vga_buffer[i * VGA_WIDTH + j] = vga_buffer[(i + 1) * VGA_WIDTH + j];
+        }
+    }
+    // Clear the last line after scrolling
+    for (int j = 0; j < VGA_WIDTH; j++) {
+        vga_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + j] = ' ' | (WHITE << 8);
+    }
+}
+
 // Function to move the cursor to the next line
 void newline() {
     cursor_pos += VGA_WIDTH; // Move cursor to the start of the next line
 
     // Check if we have exceeded the screen height
     if (cursor_pos >= VGA_WIDTH * VGA_HEIGHT) {
-        cursor_pos = 0; // Wrap to the top
+        scroll();  // Scroll the screen up
+        cursor_pos -= VGA_WIDTH; // Move the cursor back to the last line
     }
 
     // Ensure the cursor starts at the leftmost column of the new line

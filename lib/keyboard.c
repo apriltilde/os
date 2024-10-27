@@ -81,6 +81,11 @@ void keyboard_handler(void) {
 		    case 0x0D: c = shift_pressed ? '+' : '='; break; // =
 		    case 0x35: c = shift_pressed ? '?' : '/'; break; // /
 		    case 0x27: c = shift_pressed ? ':' : ';'; break; // ;
+		    
+		    case 0x34: c = shift_pressed ? '>' : '.'; break; // .
+		    case 0x33: c = shift_pressed ? '<' : ','; break; // ,
+		    
+			
                     case 0x39: c = ' '; break; // Space bar
                     case 0x1C: c = '\n'; break; // Enter key
                     case 0x0E: c = '\b'; break; // Backspace key
