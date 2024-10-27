@@ -1,7 +1,10 @@
 #include "print.h"
 #include "keyboard.h"
-#include "fsys.h"
+#include "print.h"
+#include "keyboard.h"
+#include "pit.h"
 #include <stdint.h>
+#include <stdlib.h>  // For atoi
 
 #define BUFFER_SIZE 128
 static char input_buffer[BUFFER_SIZE];
@@ -19,23 +22,19 @@ void cmd_handle_input(void);
 void print_command(void);
 void add_command(void);
 void unknown_command(void);
-void create_command(void);
-void put_command(void);
-void read_command(void);
 void int_to_string(int num, char *str);
 int match_command(const char *cmd);
 void clear_command(void);
-void ls_command(void);
+void sleep_command(void);  // Update to take no parameters
+void beep_command(void);
 
 // Array of available commands
 static Command commands[] = {
     { "print ", print_command },   // "print " command with handler
     { "add ", add_command },       // "add " command with handler
     { "clear", clear_command },    // "clear" command with handler
-    { "create ", create_command }, // "create " command with handler
-    { "put ", put_command },       // "put " command with handler
-    { "read ", read_command },     // "read " command with handler
-    { "ls", ls_command },           // "ls" command with handler
+    { "sleep ", sleep_command }, 
+    { "beep", beep_command },
 };
 
 #define NUM_COMMANDS (sizeof(commands) / sizeof(commands[0]))
@@ -51,79 +50,88 @@ void clear_command(void) {
     clear(); // Call the clear function from print.h to clear the screen
 }
 
-void put_command(void) {
-    char filename[MAX_FILENAME_LENGTH]; // Buffer for filename
-    char content[MAX_FILE_SIZE];        // Buffer for content
-    int i = 4; // Start after "put "
+//Beep command function
+void beep_command(void) {
+    int freq = 0;
+    int ms = 0;
+    int is_freq_valid = 0;
+    int is_ms_valid = 0;
 
-    // Read filename
-    int filename_index = 0;
-    while (input_buffer[i] != ' ' && input_buffer[i] != '\0' && filename_index < MAX_FILENAME_LENGTH - 1) {
-        filename[filename_index++] = input_buffer[i++];
-    }
-    filename[filename_index] = '\0'; // Null-terminate filename
+    // Skip the command name "beep " (which is 5 characters)
+    int i = 5; 
 
-    // Skip spaces between filename and content
-    while (input_buffer[i] == ' ') {
+    // Extract frequency
+    while (i < buffer_index) {
+        char ch = input_buffer[i];
+
+        // If character is a digit, build the frequency number
+        if (ch >= '0' && ch <= '9') {
+            freq = freq * 10 + (ch - '0');
+            is_freq_valid = 1; // Mark that we've encountered a valid digit
+        } else if (ch == ' ') { // Move to the next part after the space
+            i++;
+            break; // Stop processing when we reach a space
+        } else {
+            // Invalid character encountered
+            print(RED, "Invalid frequency input.\n");
+            return; // Exit the command handler if input is invalid
+        }
         i++;
     }
 
-    // Read content
-    int content_index = 0;
-    while (input_buffer[i] != '\0' && content_index < MAX_FILE_SIZE - 1) {
-        content[content_index++] = input_buffer[i++];
+    // Extract duration in milliseconds
+    while (i < buffer_index) {
+        char ch = input_buffer[i];
+
+        // If character is a digit, build the milliseconds number
+        if (ch >= '0' && ch <= '9') {
+            ms = ms * 10 + (ch - '0');
+            is_ms_valid = 1; // Mark that we've encountered a valid digit
+        } else if (ch == ' ' || ch == '\0') {
+            break; // Stop processing if we reached the end of the number
+        } else {
+            // Invalid character encountered
+            print(RED, "Invalid duration input.\n");
+            return; // Exit the command handler if input is invalid
+        }
+        i++;
     }
-    content[content_index] = '\0'; // Null-terminate content
-	print(WHITE, "\n");
-    put(filename, content); // Call the put function
-}
 
-void read_command(void) {
-    char filename[MAX_FILENAME_LENGTH]; // Buffer for the filename
-    int i = 0;
-
-    // Extract the filename from the input buffer
-    for (i = 5; i < buffer_index && i < MAX_FILENAME_LENGTH - 1; i++) {
-        filename[i - 5] = input_buffer[i]; // Copy the filename
-    }
-    filename[i - 5] = '\0'; // Null-terminate the filename
-	print(WHITE, "\n");
-    // Read the file using the filesystem function
-    read_file(filename); // Call read_file to print its content
-}
-
-
-void ls_command(void) {
-    print(WHITE, "\n"); // Print a newline for better readability
-    list_files();       // Call the list_files function to display the files
-    print(WHITE, "\n"); // Print a newline after listing the files
-}
-
-
-void create_command(void) {
-    char filename[MAX_FILENAME_LENGTH]; // Buffer for the filename
-    int i = 0;
-
-    // Extract the filename from the input buffer
-    for (i = 7; i < buffer_index && i < MAX_FILENAME_LENGTH - 1; i++) {
-        filename[i - 7] = input_buffer[i]; // Copy the filename
-    }
-    filename[i - 7] = '\0'; // Null-terminate the filename
-
-    // Create the file using the filesystem function
-    if (create_file(filename) == 0) { // Call create_file with just the filename
-   		 print(WHITE, "\n");
-        print(WHITE, "File created: ");
-        print(WHITE, filename);
+    // Check if both frequency and duration are valid
+    if (is_freq_valid && is_ms_valid) {
+        beep(freq, ms); // Call the existing beep function from pit.h
         print(WHITE, "\n");
     } else {
-    	print(WHITE, "\n");
-        print(WHITE, "Failed to create file: ");
-        print(WHITE, filename);
-        print(WHITE, "\n");
+        print(RED, "Invalid beep parameters.\n"); // Print error if parameters are not valid
     }
 }
 
+// Sleep command function
+void sleep_command(void) {
+    // Skip the command name "sleep " (which is 6 characters)
+    int ms = 0;
+    int is_number = 0;
+
+    for (int i = 6; i < buffer_index; i++) {
+        char ch = input_buffer[i];
+
+        // If character is a digit, build the number
+        if (ch >= '0' && ch <= '9') {
+            ms = ms * 10 + (ch - '0');
+            is_number = 1; // Mark that we've encountered a digit
+        } else if (ch == ' ' || ch == '\0') {
+            // If we encounter a space or null and we have a valid number
+            break; // Stop processing if we reached the end of the number
+        }
+    }
+
+    if (is_number) { // Proceed only if we have a valid positive number
+        sleep(ms); // Call the existing sleep function from pit.h
+        print(WHITE, "\n");
+    } else {
+        print(RED, "Invalid sleep duration.\n"); // Print error if ms is not valid
+    }
+}
 
 // Function to handle the "print" command
 void print_command(void) {
