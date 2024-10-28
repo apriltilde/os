@@ -50,7 +50,7 @@ static Command commands[] = {
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
     print(WHITE, "APRILOS...\n"); // Display a message on the screen
-    print(RED, "$ "); // Print the initial prompt
+    print(LIGHT_RED, "$ "); // Print the initial prompt
 }
 
 void clear_command(void) {
@@ -80,6 +80,7 @@ void beep_command(void) {
             break; // Stop processing when we reach a space
         } else {
             // Invalid character encountered
+            print(WHITE, "\n"); 
             print(RED, "Invalid frequency input.\n");
             return; // Exit the command handler if input is invalid
         }
@@ -98,6 +99,7 @@ void beep_command(void) {
             break; // Stop processing if we reached the end of the number
         } else {
             // Invalid character encountered
+            print(WHITE, "\n"); 
             print(RED, "Invalid duration input.\n");
             return; // Exit the command handler if input is invalid
         }
@@ -109,6 +111,7 @@ void beep_command(void) {
         beep(freq, ms); // Call the existing beep function from pit.h
         print(WHITE, "\n");
     } else {
+    	print(WHITE, "\n"); 
         print(RED, "Invalid beep parameters.\n"); // Print error if parameters are not valid
     }
 }
@@ -204,6 +207,7 @@ void poke_command(void) {
         print(WHITE, value_str);
         print(WHITE, "\n"); 
     } else {
+   		print(WHITE, "\n"); 
         print(RED, "Invalid address or value.\n"); // Print error if address or value is not valid
     }
 }
@@ -253,6 +257,7 @@ void peek_command(void) {
         print(WHITE, data_str);
         print(WHITE, "\n"); 
     } else {
+    	print(WHITE, "\n"); 
         print(RED, "Invalid memory address.\n"); // Print error if address is not valid
     }
 }
@@ -280,6 +285,7 @@ void sleep_command(void) {
         sleep(ms); // Call the existing sleep function from pit.h
         print(WHITE, "\n");
     } else {
+        print(WHITE, "\n"); 
         print(RED, "Invalid sleep duration.\n"); // Print error if ms is not valid
     }
 }
@@ -423,7 +429,7 @@ void cmd_handle_input(void) {
             }
 
             buffer_index = 0; // Reset buffer index for next command
-            print(RED, "$ "); // Print the prompt again
+            print(LIGHT_RED, "$ "); // Print the prompt again
         } else if (last_char == '\b') { // If Backspace is pressed
             if (buffer_index > 0) { // Ensure there's something to delete
                 buffer_index--; // Move buffer index back
