@@ -8,4 +8,4 @@ gcc -m32 -ffreestanding -fno-stack-protector -c lib/pit.c -o pit.o
 ld -m elf_i386 -T linker.ld -o kernel boot.o kernel.o print.o keyboard.o cmd.o pit.o
 mv kernel aprilos/boot
 grub-mkrescue -o april.iso aprilos/
-qemu-system-i386 -audiodev pa,id=speaker -machine pcspk-audiodev=speaker april.iso
+qemu-system-i386 -audiodev pa,id=speaker -machine pcspk-audiodev=speaker -boot d -cdrom april.iso -m 256 -hda disk.img 
