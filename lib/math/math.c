@@ -72,8 +72,8 @@ void add_command(void) {
 
     char result[32];
     int_to_str(sum, result);
-    print(WHITE, "\nResult: ");
-    print(WHITE, result);
+    print(WHITE, "\n: ");
+    print(LIGHT_BLUE, result);
     print(WHITE, "\n");
 }
 
@@ -93,8 +93,8 @@ void sub_command(void) {
 
     char out[32];
     int_to_str(result, out);
-    print(WHITE, "\nResult: ");
-    print(WHITE, out);
+    print(WHITE, "\n: ");
+    print(LIGHT_BLUE, out);
     print(WHITE, "\n");
 }
 
@@ -114,8 +114,8 @@ void mul_command(void) {
 
     char result[32];
     int_to_str(product, result);
-    print(WHITE, "\nResult: ");
-    print(WHITE, result);
+    print(WHITE, "\n: ");
+    print(LIGHT_BLUE, result);
     print(WHITE, "\n");
 }
 
@@ -140,8 +140,8 @@ void div_command(void) {
 
     char out[32];
     int_to_str(result, out);
-    print(WHITE, "\nResult: ");
-    print(WHITE, out);
+    print(WHITE, "\n: ");
+    print(LIGHT_BLUE, out);
     print(WHITE, "\n");
 }
 
