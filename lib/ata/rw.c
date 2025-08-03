@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "../core/string.h" // for str_eq, str_copy
 #include "rw.h"
 #include "../core/print.h"// for print, print_hex, print_char, hex_to_uint32, etc.
 #include "ata.h"   // for read_sector, write_sector, etc.
@@ -117,27 +118,9 @@ void wipesec(void) {
     print(GREEN, "Sector wiped successfully.\n");
 }
 
-int str_eq(const char* a, const char* b) {
-    int i = 0;
-    while (a[i] != '\0' && b[i] != '\0') {
-        if (a[i] != b[i]) return 0;
-        i++;
-    }
-    return a[i] == b[i];
-}
-
-// Helper: copy string with max length
-void str_copy(char* dest, const char* src, int max_len) {
-    int i = 0;
-    while (src[i] != '\0' && i < max_len - 1) {
-        dest[i] = src[i];
-        i++;
-    }
-    dest[i] = '\0';
-}
 
 // Extract variable value from sector 0
-void extract_value_from_sector(const char* var_name, char* output, int max_len) {
+void var_extract(const char* var_name, char* output, int max_len) {
     uint8_t sector_data[SECTOR_SIZE];
     read_sector(sector_data, 0);
 

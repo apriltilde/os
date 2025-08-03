@@ -90,16 +90,6 @@ void help_command(void) {
 
     const char* last_category = 0;
 
-    // Simple inline string equality function
-    int str_equal(const char* a, const char* b) {
-        int i = 0;
-        while (a[i] != '\0' && b[i] != '\0') {
-            if (a[i] != b[i]) return 0;
-            i++;
-        }
-        return a[i] == b[i];
-    }
-
     for (int i = 0; i < NUM_COMMANDS; i++) {
         const char* category = commands[i].category;
 
@@ -206,7 +196,7 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
         // Handle :var case
         if (args[arg_count][0] == ':') {
             char resolved_value[BUFFER_SIZE];
-            extract_value_from_sector(args[arg_count] + 1, resolved_value, max_len);
+            var_extract(args[arg_count] + 1, resolved_value, max_len);
             str_copy(args[arg_count], resolved_value, max_len);
         }
 
