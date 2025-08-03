@@ -10,6 +10,7 @@
 #include "ata/rw.h"
 #include "fs/fs.h"
 #include "fs/fsc.h"
+#include "vga/vga.h"
 
 #include <stdint.h>
 
@@ -76,11 +77,14 @@ static Command commands[] = {
 
 #define NUM_COMMANDS (sizeof(commands) / sizeof(commands[0]))
 
+
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
 	//writebasicfs(); // DO THIS IF YOU FUCK IT ALL UP
     print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
+	initvideo(); 
+	//needs memory mapping to work i think
 }
 
 void addfs_command(void) {

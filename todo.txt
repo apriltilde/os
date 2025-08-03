@@ -1,5 +1,5 @@
 fix print
 setvar command
 more command options
-command file recognition
+-command file recognition
 
