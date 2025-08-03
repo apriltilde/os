@@ -1,5 +1,6 @@
 gcc -m32 -ffreestanding -fno-stack-protector -c kernel.c -o bin/kernel.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/core/print.c -o bin/print.o
+gcc -m32 -ffreestanding -fno-stack-protector -c lib/core/string.c -o bin/string.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/keyboard/keyboard.c -o bin/keyboard.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/cmd.c -o bin/cmd.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/clock/clock.c -o bin/clock.o
@@ -8,7 +9,7 @@ gcc -m32 -ffreestanding -fno-stack-protector -c lib/mem/emem.c -o bin/mem.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/ata/ata.c -o bin/ata.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/ata/rw.c -o bin/rw.o
 
-ld -m elf_i386 -T linker.ld -o kernel bin/boot.o bin/kernel.o bin/print.o bin/keyboard.o bin/cmd.o bin/clock.o bin/math.o bin/mem.o bin/ata.o bin/rw.o
+ld -m elf_i386 -T linker.ld -o kernel bin/boot.o bin/kernel.o bin/print.o bin/keyboard.o bin/cmd.o bin/clock.o bin/math.o bin/mem.o bin/ata.o bin/rw.o bin/string.o
 mv kernel aprilos/boot
 grub-mkrescue -o april.iso aprilos/
 qemu-system-i386 -boot d -cdrom april.iso -m 256 -hda disk.img 

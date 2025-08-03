@@ -1,5 +1,7 @@
 #include "core/print.h"
 #include "core/io.h"
+#include "core/string.h"
+
 #include "keyboard/keyboard.h"
 #include "mem/emem.h"
 #include "clock/clock.h"
@@ -93,7 +95,7 @@ void help_command(void) {
     for (int i = 0; i < NUM_COMMANDS; i++) {
         const char* category = commands[i].category;
 
-        if (last_category == 0 || !str_equal(category, last_category)) {
+        if (last_category == 0 || !str_eq(category, last_category)) {
             print(LIGHT_CYAN, "\n\n== ");
             print(LIGHT_CYAN, category);
             print(LIGHT_CYAN, " ==\n");
