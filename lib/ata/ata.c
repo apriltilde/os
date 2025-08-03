@@ -19,6 +19,7 @@
 #define ATA_SR_BSY      0x80
 #define ATA_SR_DRQ      0x08
 
+
 static void ata_wait() {
     int timeout = 100000;
     while ((inb(ATA_STATUS) & ATA_SR_BSY) && --timeout);

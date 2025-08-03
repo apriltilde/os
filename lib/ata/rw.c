@@ -4,6 +4,8 @@
 #include "ata.h"   // for read_sector, write_sector, etc.
 
 #define BUFFER_SIZE 512
+#define SECTOR_SIZE 512
+
 extern char input_buffer[BUFFER_SIZE];
 extern int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_args, int max_len);
 
@@ -115,4 +117,58 @@ void wipesec(void) {
     print(GREEN, "Sector wiped successfully.\n");
 }
 
+int str_eq(const char* a, const char* b) {
+    int i = 0;
+    while (a[i] != '\0' && b[i] != '\0') {
+        if (a[i] != b[i]) return 0;
+        i++;
+    }
+    return a[i] == b[i];
+}
 
+// Helper: copy string with max length
+void str_copy(char* dest, const char* src, int max_len) {
+    int i = 0;
+    while (src[i] != '\0' && i < max_len - 1) {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
+
+// Extract variable value from sector 0
+void extract_value_from_sector(const char* var_name, char* output, int max_len) {
+    uint8_t sector_data[SECTOR_SIZE];
+    read_sector(sector_data, 0);
+
+    int i = 0;
+    while (i < SECTOR_SIZE) {
+        // Parse key
+        char key[32], value[32];
+        int k = 0, v = 0;
+
+        while (i < SECTOR_SIZE && sector_data[i] != '=' && sector_data[i] != '\0' && k < 31) {
+            key[k++] = sector_data[i++];
+        }
+        key[k] = '\0';
+
+        if (sector_data[i] != '=') break;
+        i++; // skip '='
+
+        // Parse value
+        while (i < SECTOR_SIZE && sector_data[i] != ';' && sector_data[i] != '\0' && v < 31) {
+            value[v++] = sector_data[i++];
+        }
+        value[v] = '\0';
+
+        if (sector_data[i] == ';') i++; // skip ';'
+
+        if (str_eq(key, var_name)) {
+            str_copy(output, value, max_len);
+            return;
+        }
+    }
+
+    // fallback: copy the original variable name
+    str_copy(output, var_name, max_len);
+}

@@ -9,6 +9,9 @@
 #include <stdint.h>
 
 #define BUFFER_SIZE 512
+#define SECTOR_SIZE 512
+
+
 static char input_buffer[BUFFER_SIZE];
 static int buffer_index = 0;
 
@@ -199,9 +202,17 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
             args[arg_count][j++] = input_buffer[i++];
         }
         args[arg_count][j] = '\0';
+
+        // Handle :var case
+        if (args[arg_count][0] == ':') {
+            char resolved_value[BUFFER_SIZE];
+            extract_value_from_sector(args[arg_count] + 1, resolved_value, max_len);
+            str_copy(args[arg_count], resolved_value, max_len);
+        }
+
         arg_count++;
 
-        // Skip any spaces before next argument
+        // Skip spaces before next argument
         while (input_buffer[i] == ' ') i++;
     }
 
