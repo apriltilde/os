@@ -126,32 +126,49 @@ void var_extract(const char* var_name, char* output, int max_len) {
 
     int i = 0;
     while (i < SECTOR_SIZE) {
-        // Parse key
-        char key[32], value[32];
-        int k = 0, v = 0;
+        // Skip any spaces, nulls, or garbage between entries
+        while (i < SECTOR_SIZE && (sector_data[i] == ' ' || sector_data[i] == '\0')) {
+            i++;
+        }
 
-        while (i < SECTOR_SIZE && sector_data[i] != '=' && sector_data[i] != '\0' && k < 31) {
+        if (i >= SECTOR_SIZE) break;
+
+        // Parse key
+        char key[32];
+        int k = 0;
+        while (i < SECTOR_SIZE && sector_data[i] != '=' && sector_data[i] != ';' && k < 31) {
             key[k++] = sector_data[i++];
         }
         key[k] = '\0';
 
-        if (sector_data[i] != '=') break;
-        i++; // skip '='
+        if (i >= SECTOR_SIZE || sector_data[i] != '=') {
+            // Skip malformed or partial entry
+            while (i < SECTOR_SIZE && sector_data[i] != ';') i++;
+            if (i < SECTOR_SIZE && sector_data[i] == ';') i++;
+            continue;
+        }
+
+        i++; // Skip '='
 
         // Parse value
-        while (i < SECTOR_SIZE && sector_data[i] != ';' && sector_data[i] != '\0' && v < 31) {
+        char value[32];
+        int v = 0;
+        while (i < SECTOR_SIZE && sector_data[i] != ';' && v < 31) {
             value[v++] = sector_data[i++];
         }
         value[v] = '\0';
 
-        if (sector_data[i] == ';') i++; // skip ';'
+        if (i < SECTOR_SIZE && sector_data[i] == ';') i++;
 
+        // Check match
         if (str_eq(key, var_name)) {
             str_copy(output, value, max_len);
             return;
         }
     }
 
-    // fallback: copy the original variable name
+    // Fallback if not found
     str_copy(output, var_name, max_len);
 }
+
+

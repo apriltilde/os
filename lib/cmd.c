@@ -63,6 +63,7 @@ static Command commands[] = {
     { "write",  write_command, "disk" },
     { "read", read_command, "disk" },
     { "wipe", wipe_command, "disk" },
+	{ "w" , write_command, "disk" },
 };
 
 
@@ -123,27 +124,19 @@ void unknown_command(void) {
 }
 
 void print_command(void) {
-    char print_buffer[BUFFER_SIZE]; // Temporary buffer for the print command
-    int print_index = 0;
+    char args[1][BUFFER_SIZE]; // Only expect 1 argument: the string to print
+    int arg_count = extract_arguments("print", args, 1, BUFFER_SIZE);
 
-    // Copy the string after "print " into print_buffer
-    for (int i = 6; i < buffer_index; i++) {
-        if (print_index < BUFFER_SIZE - 1) {
-            print_buffer[print_index++] = input_buffer[i];
-        }
-    }
-    print_buffer[print_index] = '\0'; // Null-terminate the string
-
-    if (print_index == 0) {
-        // No argument after print command
+    if (arg_count == 0) {
         print(WHITE, "\nUsage: print <string>\n");
         return;
     }
 
     print(WHITE, "\n");
-    print(WHITE, print_buffer); // Print the extracted string
-    print(WHITE, "\n"); // Print a newline
+    print(WHITE, args[0]);
+	print(WHITE, "\n");
 }
+
 
 
 //Math
@@ -200,8 +193,8 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
             char resolved_value[BUFFER_SIZE];
             var_extract(args[arg_count] + 1, resolved_value, max_len);
             str_copy(args[arg_count], resolved_value, max_len);
-        }
-
+			print (WHITE, "\b");
+		}
         arg_count++;
 
         // Skip spaces before next argument
