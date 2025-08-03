@@ -4,6 +4,8 @@
 #include "mem/emem.h"
 #include "clock/clock.h"
 #include "math/math.h"
+#include "ata/ata.h"
+#include <stdint.h>
 
 #define BUFFER_SIZE 128
 static char input_buffer[BUFFER_SIZE];
@@ -35,6 +37,9 @@ void sub_command(void);
 void mul_command(void);
 void div_command(void);
 
+void ata_read_sector5_first8(uint8_t* buffer);
+void ata_write_sector5_first8(void);
+
 
 static Command commands[] = {
     { "help", help_command },
@@ -48,7 +53,8 @@ static Command commands[] = {
 	{ "sub", sub_command },
 	{ "mul", mul_command },
 	{ "div", div_command },
-
+    { "read", ata_read_sector5_first8 },
+    { "write", ata_write_sector5_first8 },
 };
 
 
@@ -60,6 +66,16 @@ void cmd_init(void) {
     print(LIGHT_RED, "$ "); // Print the initial prompt
 }
 
+void ata_read_sector5_first8(uint8_t* buffer) {
+    // Call the ATA read function
+    ata_read_sector5_first8(buffer);
+}
+
+
+void ata_write_sector5_first8(void) {
+    // Call the ATA write function
+    ata_write_sector5_first8();
+}
 
 //Basic commands
 
