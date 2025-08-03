@@ -37,9 +37,8 @@ void sub_command(void);
 void mul_command(void);
 void div_command(void);
 
-void ata_read_sector5_first8(uint8_t* buffer);
-void ata_write_sector5_first8(void);
-
+void write(void);
+void read_cmd(void);
 
 static Command commands[] = {
     { "help", help_command },
@@ -53,8 +52,8 @@ static Command commands[] = {
 	{ "sub", sub_command },
 	{ "mul", mul_command },
 	{ "div", div_command },
-    { "read", ata_read_sector5_first8 },
-    { "write", ata_write_sector5_first8 },
+    { "write",  write },
+    { "read", read_cmd },
 };
 
 
@@ -66,13 +65,12 @@ void cmd_init(void) {
     print(LIGHT_RED, "$ "); // Print the initial prompt
 }
 
-void ata_read_sector5_first8(uint8_t* buffer) {
-    // Call the ATA read function
-    ata_read_sector5_first8(buffer);
+void read_cmd(void) {
+	read();
 }
 
 
-void ata_write_sector5_first8(void) {
+void write(void) {
     // Call the ATA write function
     ata_write_sector5_first8();
 }

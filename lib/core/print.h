@@ -1,4 +1,5 @@
 // print.h
+ #include <stdint.h>
 #ifndef PRINT_H
 #define PRINT_H
 
@@ -22,6 +23,7 @@
 
 void print(int color, const char *str);
 void print_char(int color, char c);
+void print_hex(int color, uint16_t value);
 void clear(void);
 void newline();
 

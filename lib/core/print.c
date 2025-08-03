@@ -74,3 +74,11 @@ void print(int color, const char *str) {
         print_char(color, *str++);
     }
 }
+
+void print_hex(int color, uint16_t value) {
+    const char* hex_chars = "0123456789ABCDEF";
+    for (int i = 12; i >= 0; i -= 4) {
+        print_char(color, hex_chars[(value >> i) & 0xF]);
+    }
+}
+
