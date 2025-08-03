@@ -55,6 +55,29 @@ uint32_t hex_to_uint32(const char *hex) {
     return value;
 }
 
+void uint32_to_hex(uint32_t value, char *out) {
+    const char *hex_digits = "0123456789ABCDEF";
+
+    if (value == 0) {
+        out[0] = '0';
+        out[1] = '\0';
+        return;
+    }
+
+    int pos = 0;
+    int started = 0;
+
+    for (int i = 28; i >= 0; i -= 4) {
+        uint8_t digit = (value >> i) & 0xF;
+        if (digit != 0 || started) {
+            out[pos++] = hex_digits[digit];
+            started = 1;
+        }
+    }
+
+    out[pos] = '\0';
+}
+
 void read_sector(uint8_t* buffer, uint32_t lba) {
     newline();
 

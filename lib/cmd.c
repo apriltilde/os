@@ -70,7 +70,7 @@ static Command commands[] = {
     { "read", read_command, "disk" },
     { "wipe", wipe_command, "disk" },
 	{ "fs", readfs_command, "disk" },
-    { "fs add", addfs_command, "disk" },
+    { "create", addfs_command, "disk" },
 };
 
 
@@ -78,7 +78,7 @@ static Command commands[] = {
 
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
-	writebasicfs();
+	//writebasicfs(); // DO THIS IF YOU FUCK IT ALL UP
     print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
 }
@@ -204,13 +204,54 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
         }
         args[arg_count][j] = '\0';
 
-        // Handle :var case
+        // Handle :var syntax
         if (args[arg_count][0] == ':') {
             char resolved_value[BUFFER_SIZE];
             var_extract(args[arg_count] + 1, resolved_value, max_len);
             str_copy(args[arg_count], resolved_value, max_len);
-			print (WHITE, "\b");
-		}
+            print(WHITE, "\b");
+        }
+
+        // Handle /filename -> replace with sector number
+        else if (args[arg_count][0] == '/') {
+            char filename[BUFFER_SIZE];
+            str_copy(filename, args[arg_count] + 1, BUFFER_SIZE); // Skip '/'
+
+            uint8_t dir[512];
+            read_sector(dir, 1);
+
+            int di = 0;
+            while (di < 512 && dir[di] != 0) {
+                char name[64];
+                int ni = 0;
+
+                while (dir[di] != '<' && dir[di] != 0 && ni < 63) {
+                    name[ni++] = dir[di++];
+                }
+                name[ni] = '\0';
+
+                if (dir[di] != '<') break;
+                di++;
+
+                char snum[12];
+                int si = 0;
+                while (dir[di] != '>' && dir[di] != 0 && si < 11) {
+                    snum[si++] = dir[di++];
+                }
+                snum[si] = '\0';
+
+                if (dir[di] == '>') di++;
+                if (dir[di] == ';') di++;
+
+                if (str_eq(name, filename)) {
+                    // Use decimal sector string directly (no conversion needed)
+                    str_copy(args[arg_count], snum, max_len);
+					print(WHITE, "\b");
+                    break;
+                }
+            }
+        }
+
         arg_count++;
 
         // Skip spaces before next argument
@@ -219,6 +260,7 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
 
     return arg_count;
 }
+
 
 int match_command(const char *cmd) {
     for (int i = 0; i < NUM_COMMANDS; i++) {

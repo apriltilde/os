@@ -54,26 +54,63 @@ void readfsc_command(void) {
 
 void addfsc_command(void) {
     char args[2][BUFFER_SIZE];
-    int arg_count = extract_arguments("fs add", args, 2, BUFFER_SIZE);
+    int arg_count = extract_arguments("create", args, 2, BUFFER_SIZE);
 
     if (arg_count < 2) {
-        print(WHITE, "\nUsage: fs add <filename> <sector>\n");
+        print(WHITE, "\nUsage: create <filename> <sector>\n");
         return;
     }
 
-    // Convert sector number from string to integer
+    // Convert sector string to uint32
     uint32_t sector = hex_to_uint32(args[1]);
-    if (sector == 0xFFFFFFFF) {
-        print(WHITE, "\nInvalid sector number\n");
+
+    // Read current directory from sector 1
+    uint8_t dir[SECTOR_SIZE];
+    read_sector(dir, 1);
+
+    int i = 0;
+    while (i < SECTOR_SIZE && dir[i] != 0) {
+        // Move to next entry (look for ';')
+        while (i < SECTOR_SIZE && dir[i] != ';') {
+            i++;
+        }
+        if (i < SECTOR_SIZE) i++; // Move past ';'
+    }
+
+    if (i >= SECTOR_SIZE - 1) {
+        print(RED, "\nDirectory full. Cannot add more files.\n");
         return;
     }
 
-    // Prepare directory entry
-    uint8_t dir_entry[64] = {0};
-    str_copy((char*)dir_entry, args[0], 64);
-    dir_entry[63] = '<'; // Add '<' at the end of filename
-    uint32_t_to_hex(sector, &dir_entry[64 - 12]); // Convert sector number to hex string
+    // Format: name<sector>;
+    int ni = 0;
+    while (args[0][ni] != 0 && i < SECTOR_SIZE - 1) {
+        dir[i++] = args[0][ni++];
+    }
 
-    // Write the directory entry to sector 1
-    write_sector(dir_entry, 1);
+    if (i >= SECTOR_SIZE - 12) {
+        print(RED, "\nFilename too long or not enough space.\n");
+        return;
+    }
+
+    dir[i++] = '<';
+
+    // Convert sector number back to hex string
+    char snum[12];
+    uint32_to_hex(sector, snum);
+
+    int si = 0;
+    while (snum[si] != 0 && i < SECTOR_SIZE - 1) {
+        dir[i++] = snum[si++];
+    }
+
+    dir[i++] = '>';
+    dir[i++] = ';';
+    dir[i] = 0; // Null-terminate directory
+
+    // Write updated directory back to sector 1
+    write_sector(dir, 1);
+
+    print(GREEN, "\nFile added successfully.\n");
 }
+

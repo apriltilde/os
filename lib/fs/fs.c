@@ -7,19 +7,25 @@
 
 void writebasicfs() {
     uint8_t buffer[512];
-    for (int i = 0; i < 512; i++) buffer[i] = 0;
 
-    // Write initial directory entries
+    // Read current content of sector 1
+    read_sector(buffer, 1);
+
+    // New initial directory entries
     const char* init_str = "vars<0>;fs<1>;";
     int i = 0;
+
+    // Overwrite only the beginning with the new string
     while (init_str[i] && i < 511) {
         buffer[i] = (uint8_t)init_str[i];
         i++;
     }
-    buffer[i] = 0; // null terminate
+    buffer[i] = 0; // Null-terminate the directory
 
+    // Write the modified buffer back
     write_sector(buffer, 1);
 }
+
 
 
 // Add a filename-sector mapping to the directory ledger (sector 1)

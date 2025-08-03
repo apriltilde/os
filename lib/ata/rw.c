@@ -22,13 +22,12 @@ void readsec(void) {
     uint32_t sector = hex_to_uint32(args[0]);
     uint8_t* buffer = (uint8_t*)0x7E00;
 
-    print(BLUE, "\nReading sector ");
+    print(BLUE, "\nSector: ");
     print_hex(WHITE, sector);
-    print(WHITE, "...\n");
+	newline();
 
     read_sector(buffer, sector);
 
-    print(WHITE, "\n\nText (ASCII):\n");
     for (int i = 0; i < 512; i++) {
         char c = (char)buffer[i];
         if (c >= 32 && c <= 126) {
@@ -75,19 +74,11 @@ void writesec(void) {
         }
     }
 
-    print(LIGHT_MAGENTA, "\nWriting to sector ");
-    print_hex(WHITE, sector);
-    print(WHITE, " starting at byte ");
-    print_hex(WHITE, start_byte);
-    print(WHITE, " with data: ");
-
     char temp_str[2] = {0, 0};
     for (int i = start_byte; i < buf_index; i++) {
         temp_str[0] = buffer[i];
-        print(WHITE, temp_str);
     }
-
-    print(WHITE, "\n");
+	print(GREEN, "Write complete.\n");
 
     write_sector(buffer, sector);
 }
@@ -111,7 +102,7 @@ void wipesec(void) {
 
     print(RED, "\nWiping sector ");
     print_hex(WHITE, sector);
-    print(WHITE, "...\n");
+    print(WHITE, "\n");
 
     write_sector(buffer, sector);
 
