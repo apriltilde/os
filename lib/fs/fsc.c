@@ -52,4 +52,28 @@ void readfsc_command(void) {
     }
 }
 
+void addfsc_command(void) {
+    char args[2][BUFFER_SIZE];
+    int arg_count = extract_arguments("fs add", args, 2, BUFFER_SIZE);
 
+    if (arg_count < 2) {
+        print(WHITE, "\nUsage: fs add <filename> <sector>\n");
+        return;
+    }
+
+    // Convert sector number from string to integer
+    uint32_t sector = hex_to_uint32(args[1]);
+    if (sector == 0xFFFFFFFF) {
+        print(WHITE, "\nInvalid sector number\n");
+        return;
+    }
+
+    // Prepare directory entry
+    uint8_t dir_entry[64] = {0};
+    str_copy((char*)dir_entry, args[0], 64);
+    dir_entry[63] = '<'; // Add '<' at the end of filename
+    uint32_t_to_hex(sector, &dir_entry[64 - 12]); // Convert sector number to hex string
+
+    // Write the directory entry to sector 1
+    write_sector(dir_entry, 1);
+}

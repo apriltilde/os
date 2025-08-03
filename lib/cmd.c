@@ -52,6 +52,7 @@ void read_command(void);
 void wipe_command(void);
 
 void readfs_command(void);
+void addfs_command(void);
 
 static Command commands[] = {
     { "help", help_command, "system" },
@@ -69,6 +70,7 @@ static Command commands[] = {
     { "read", read_command, "disk" },
     { "wipe", wipe_command, "disk" },
 	{ "fs", readfs_command, "disk" },
+    { "fs add", addfs_command, "disk" },
 };
 
 
@@ -79,6 +81,10 @@ void cmd_init(void) {
 	writebasicfs();
     print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
+}
+
+void addfs_command(void) {
+    addfsc_command();
 }
 
 void readfs_command(void) {

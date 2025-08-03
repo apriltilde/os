@@ -79,6 +79,7 @@ void addfile(const char* filename, uint32_t data_sector) {
     write_sector(dir, 1);
 }
 
+
 // Read the file data for given filename into out_buffer (512 bytes)
 void readfs(const char* filename, uint8_t* out_buffer) {
     uint8_t dir[512];
