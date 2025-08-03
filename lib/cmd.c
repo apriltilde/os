@@ -5,9 +5,10 @@
 #include "clock/clock.h"
 #include "math/math.h"
 #include "ata/ata.h"
+#include "ata/rw.h"
 #include <stdint.h>
 
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 512
 static char input_buffer[BUFFER_SIZE];
 static int buffer_index = 0;
 
@@ -15,6 +16,7 @@ static int buffer_index = 0;
 typedef struct {
     const char *name;               // Command name
     void (*handler)(void);          // Handler function for the command
+	const char *category;			// Command category
 } Command;
 
 void cmd_init(void);
@@ -37,23 +39,25 @@ void sub_command(void);
 void mul_command(void);
 void div_command(void);
 
-void write(void);
-void read_cmd(void);
+void write_command(void);
+void read_command(void);
+void wipe_command(void);
 
 static Command commands[] = {
-    { "help", help_command },
-    { "clear", clear_command },
-    { "print", print_command },
-    { "peek", peek_command },
-    { "poke", poke_command },
-    { "time", clock_command },
-    { "date", date_command },
-	{ "add", add_command },
-	{ "sub", sub_command },
-	{ "mul", mul_command },
-	{ "div", div_command },
-    { "write",  write },
-    { "read", read_cmd },
+    { "help", help_command, "system" },
+    { "clear", clear_command, "system" },
+    { "print", print_command, "system" },
+    { "peek", peek_command, "memory" },
+    { "poke", poke_command, "memory" },
+    { "time", clock_command, "system" },
+    { "date", date_command, "system" },
+	{ "add", add_command, "math" },
+	{ "sub", sub_command, "math" },
+	{ "mul", mul_command, "math" },
+	{ "div", div_command, "math" },
+    { "write",  write_command, "disk" },
+    { "read", read_command, "disk" },
+    { "wipe", wipe_command, "disk" },
 };
 
 
@@ -61,30 +65,56 @@ static Command commands[] = {
 
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
-    print(WHITE, "APRILOS...\n"); // Display a message on the screen
+    print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
 }
 
-void read_cmd(void) {
-	read();
+void read_command(void) {
+	readsec();
 }
 
+void write_command(void) {
+	writesec();
+}
 
-void write(void) {
-    // Call the ATA write function
-    ata_write_sector5_first8();
+void wipe_command(void) {
+	wipesec();
 }
 
 //Basic commands
-
 void help_command(void) {
-    print(WHITE, "\nAvailable commands:\n");
-    for (int i = 0; i < NUM_COMMANDS; i++) {
-        print(WHITE, commands[i].name); // Print each command name
-        print(WHITE, ", "); // Newline after each command
+    print(WHITE, "\nAvailable commands:");
+
+    const char* last_category = 0;
+
+    // Simple inline string equality function
+    int str_equal(const char* a, const char* b) {
+        int i = 0;
+        while (a[i] != '\0' && b[i] != '\0') {
+            if (a[i] != b[i]) return 0;
+            i++;
+        }
+        return a[i] == b[i];
     }
-    print(WHITE, "\n"); // Final newline
+
+    for (int i = 0; i < NUM_COMMANDS; i++) {
+        const char* category = commands[i].category;
+
+        if (last_category == 0 || !str_equal(category, last_category)) {
+            print(LIGHT_CYAN, "\n\n== ");
+            print(LIGHT_CYAN, category);
+            print(LIGHT_CYAN, " ==\n");
+            last_category = category;
+        }
+
+        print(WHITE, " ");
+        print(WHITE, commands[i].name);
+    }
+
+    print(WHITE, "\n");
 }
+
+
 
 void clear_command(void) {
     clear(); // Call the clear function from print.h to clear the screen

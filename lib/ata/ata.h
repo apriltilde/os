@@ -4,6 +4,10 @@
 #include <stdint.h>
 
 void read(void);
-void ata_write_sector5_first8(void);
+void write(void);
 
+void read_sector(uint8_t* buffer, uint32_t lba);
+void write_sector(const uint8_t* buffer, uint32_t lba);
+
+uint32_t hex_to_uint32(const char *hex);
 #endif // ATA_H

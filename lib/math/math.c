@@ -5,7 +5,7 @@
 #include "../keyboard/keyboard.h"
 #include "math.h"
 
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 512
 
 extern char input_buffer[BUFFER_SIZE];
 extern int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_args, int max_len);
@@ -57,7 +57,7 @@ int parse_int(const char *str) {
 }
 
 void add_command(void) {
-    char args[10][BUFFER_SIZE];
+    char args[11][BUFFER_SIZE];
     int count = extract_arguments("add", args, 10, BUFFER_SIZE);
 
     if (count < 2) {
@@ -65,7 +65,8 @@ void add_command(void) {
         return;
     }
 
-    int sum = 0;
+	
+	int sum = 0;
     for (int i = 0; i < count; i++) {
         sum += parse_int(args[i]);
     }

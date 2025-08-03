@@ -4,7 +4,7 @@
 #include "mem.h"
 #include "../keyboard/keyboard.h"
 
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 512
 
 extern char input_buffer[BUFFER_SIZE];
 extern int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_args, int max_len);
