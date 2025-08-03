@@ -8,6 +8,9 @@
 #include "math/math.h"
 #include "ata/ata.h"
 #include "ata/rw.h"
+#include "fs/fs.h"
+#include "fs/fsc.h"
+
 #include <stdint.h>
 
 #define BUFFER_SIZE 512
@@ -48,6 +51,8 @@ void write_command(void);
 void read_command(void);
 void wipe_command(void);
 
+void readfs_command(void);
+
 static Command commands[] = {
     { "help", help_command, "system" },
     { "clear", clear_command, "system" },
@@ -63,7 +68,7 @@ static Command commands[] = {
     { "write",  write_command, "disk" },
     { "read", read_command, "disk" },
     { "wipe", wipe_command, "disk" },
-	{ "w" , write_command, "disk" },
+	{ "fs", readfs_command, "disk" },
 };
 
 
@@ -71,8 +76,13 @@ static Command commands[] = {
 
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
+	writebasicfs();
     print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
+}
+
+void readfs_command(void) {
+	readfsc_command();
 }
 
 void read_command(void) {

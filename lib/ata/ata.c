@@ -24,14 +24,12 @@ static void ata_wait() {
     int timeout = 100000;
     while ((inb(ATA_STATUS) & ATA_SR_BSY) && --timeout);
     if (timeout == 0) {
-        print(RED, "Wait for BSY to clear!\n");
         return;
     }
 
     timeout = 100000;
     while (!(inb(ATA_STATUS) & ATA_SR_DRQ) && --timeout);
     if (timeout == 0) {
-        print(RED, "Wait for DRQ to set!\n");
     }
 }
 
@@ -81,7 +79,6 @@ void read_sector(uint8_t* buffer, uint32_t lba) {
 
 void write_sector(const uint8_t* buffer, uint32_t lba) {
     newline();
-    print(LIGHT_MAGENTA, "Writing 512-byte sector...\n");
 
     // Set up LBA
     outb(ATA_SECCOUNT0, 1);
@@ -100,7 +97,6 @@ void write_sector(const uint8_t* buffer, uint32_t lba) {
     }
 
     ata_flush();
-    print(GREEN, "Write and flush complete.\n");
 }
 
 
