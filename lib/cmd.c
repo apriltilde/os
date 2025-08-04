@@ -1,6 +1,7 @@
 #include "core/print.h"
 #include "core/io.h"
 #include "core/string.h"
+#include "core/intr.h"
 
 #include "keyboard/keyboard.h"
 #include "mem/emem.h"
@@ -12,10 +13,36 @@
 #include "fs/fsc.h"
 #include "vga/vga.h"
 
+
 #include <stdint.h>
+
+
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 768
+#define CMD_AREA_WIDTH 512
+#define CMD_AREA_LINES 10
+
+static const int font_char_width = 8;
+static const int font_char_height = 16;
+
+static int in_graphics_mode = 0;
+
+// Command line area starting coordinates (centered)
+static const int cmd_x_start = (SCREEN_WIDTH - CMD_AREA_WIDTH) / 2; // 256
+static const int cmd_y_start = (SCREEN_HEIGHT / 2) - (CMD_AREA_LINES * font_char_height / 2); // roughly centered vertically
+
+// Cursor position for command input
+static int gfx_cursor_x = cmd_x_start;
+static int gfx_cursor_y = cmd_y_start;
+static int gfx_line_height = 12;
+
+
+extern const struct bitmap_font font;
 
 #define BUFFER_SIZE 512
 #define SECTOR_SIZE 512
+
+extern void sti_enable(void);
 
 
 static char input_buffer[BUFFER_SIZE];
@@ -73,12 +100,14 @@ static Command commands[] = {
     { "wipe", wipe_command, "disk" },
 	{ "fs", readfs_command, "disk" },
     { "create", addfs_command, "disk" },
-	{ "graphicsmode", graphicsmode_command, "graphics" }
+	{ "gui", graphicsmode_command, "graphics" }
 };
 
 
 #define NUM_COMMANDS (sizeof(commands) / sizeof(commands[0]))
 
+extern void irq_install_handler(int irq, void (*handler)(void));
+extern void init_gdt(void);
 
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
@@ -89,6 +118,11 @@ void cmd_init(void) {
 
 void graphicsmode_command(void) {
 	initvideo();
+	in_graphics_mode = 1;
+	init_gdt();
+	init_interrupts();
+	sti_enable();
+
 }
 
 void addfs_command(void) {
@@ -289,48 +323,124 @@ int match_command(const char *cmd) {
 }
 
 
+
+
+
+void clear_command_line_area(void) {
+    // Since no fill rect, clear by drawing spaces or blank characters across the command area
+    // We'll draw spaces line by line for CMD_AREA_LINES
+    for (int line = 0; line < CMD_AREA_LINES; line++) {
+        int y = cmd_y_start + line * font_char_height;
+        for (int x = 0; x < CMD_AREA_WIDTH; x += font_char_width) {
+            putchar(cmd_x_start + x, y, ' ', &font, black); // assuming 'black' is background
+        }
+    }
+}
+
+// Redraw input buffer on the current input line
+void redraw_input_line(void) {
+    // Clear the line first (write spaces)
+    for (int x = 0; x < CMD_AREA_WIDTH; x += font_char_width) {
+        putchar(cmd_x_start + x, gfx_cursor_y, ' ', &font, black);
+    }
+    // Then redraw input text
+    for (int i = 0; i < buffer_index; i++) {
+        putchar(cmd_x_start + i * font_char_width, gfx_cursor_y, input_buffer[i], &font, white);
+    }
+}
+
+// Reset cursor to start of line for new input line
+void move_cursor_to_new_line(void) {
+    gfx_cursor_x = cmd_x_start;
+    gfx_cursor_y += gfx_line_height;
+    if (gfx_cursor_y >= cmd_y_start + CMD_AREA_LINES * font_char_height) {
+        // If we reached bottom of command area, scroll back to top or clear area
+        gfx_cursor_y = cmd_y_start;
+        clear_command_line_area();
+    }
+}
+				
+				
+// Print prompt "$ " at cursor
+void print_prompt(void) {
+    putchar(gfx_cursor_x, gfx_cursor_y, '$', &font, green);
+    putchar(gfx_cursor_x + font_char_width, gfx_cursor_y, ' ', &font, green);
+    gfx_cursor_x += 2 * font_char_width;
+}
+
 void cmd_handle_input(void) {
-    // Call the keyboard handler to get the latest keystroke
     keyboard_handler();
     disable_cursor();
 
-    // Using the globally defined last_char variable from keyboard.c
     extern char last_char;
 
-    // If last_char is not null, process it
     if (last_char != '\0') {
-        if (last_char == '\n') { // If Enter is pressed
-            input_buffer[buffer_index] = '\0'; // Null-terminate the input buffer
+        if (last_char == '\n') { // Enter pressed
+            input_buffer[buffer_index] = '\0';
 
-            // Attempt to find and execute a matching command
             int cmd_index = match_command(input_buffer);
+
             if (cmd_index != -1) {
-                commands[cmd_index].handler(); // Call the command handler
+                commands[cmd_index].handler();
             } else {
-                unknown_command(); // Handle unknown command
+                if (in_graphics_mode) {
+                    move_cursor_to_new_line();
+						
+					// Print input and error message inside graphics mode command area
+					move_cursor_to_new_line();
+                    putstring(gfx_cursor_x, gfx_cursor_y, input_buffer, &font, white);
+                    
+					move_cursor_to_new_line();
+					putstring(gfx_cursor_x, gfx_cursor_y, "Command not found", &font, red);
+					
+                } else {
+                    unknown_command();
+                }
             }
 
-            buffer_index = 0; // Reset buffer index for next command
-            print(LIGHT_RED, "$ "); // Print the prompt again
-        } else if (last_char == '\b') { // If Backspace is pressed
-            if (buffer_index > 0) { // Ensure there's something to delete
-                buffer_index--; // Move buffer index back
-                input_buffer[buffer_index] = '\0'; // Null-terminate the buffer
+            buffer_index = 0;
 
-                // Overwrite the last character on the screen
-                print_char(WHITE, '\b'); // Move cursor back visually
-                print_char(WHITE, ' '); // Clear the last character visually
-                print_char(WHITE, '\b'); // Move cursor back again
+            if (in_graphics_mode) {
+                // Move to next line and print prompt in graphics mode
+                gfx_cursor_x = cmd_x_start;
+
+                print_prompt();
+            } else {
+                print(LIGHT_RED, "$ ");
             }
-        } else {
-            if (buffer_index < BUFFER_SIZE - 1) { // Avoid overflow
-                input_buffer[buffer_index++] = last_char; // Add character to buffer
-                input_buffer[buffer_index] = '\0'; // Null-terminate the buffer
-                print_char(WHITE, last_char); // Print character on the screen
+        }
+        else if (last_char == '\b') { // Backspace pressed
+            if (buffer_index > 0) {
+                buffer_index--;
+                input_buffer[buffer_index] = '\0';
+
+                if (in_graphics_mode) {
+               	    gfx_cursor_x -= font_char_width;
+            		putchar(gfx_cursor_x, gfx_cursor_y, '0', &font, black); 
+				
+				} else {
+                    // Original text mode backspace handling
+                    print_char(WHITE, '\b');
+                    print_char(WHITE, ' ');
+                    print_char(WHITE, '\b');
+                }
+            }
+        }
+        else { // Normal character input
+            if (buffer_index < BUFFER_SIZE - 1) {
+                input_buffer[buffer_index++] = last_char;
+                input_buffer[buffer_index] = '\0';
+
+                if (in_graphics_mode) {
+                    putchar(gfx_cursor_x, gfx_cursor_y, last_char, &font, white);
+                    gfx_cursor_x += font_char_width;
+                } else {
+                    print_char(WHITE, last_char);
+                }
             }
         }
 
-        // Clear last_char after processing
         last_char = '\0';
     }
 }
+

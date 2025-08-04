@@ -1,5 +1,6 @@
 #include "lib/core/print.h"
 #include "lib/cmd.h"  // Include the command module
+#include "lib/vga/vga.h"
 
 void kmain(void) {
 	extern void init_paging(void);

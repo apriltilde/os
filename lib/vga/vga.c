@@ -2,6 +2,7 @@
 #include "../core/io.h"
 #include "font/font.h"
 #include "vga.h"
+#include "../clock/clock.h"
 
 extern const struct bitmap_font font;
 // Bochs VBE registers and constants
@@ -91,7 +92,7 @@ static uint16_t screenHeight = 0;
 
 
 // Draw a pixel at (x,y) with given ARGB color
-void vga_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
+void putpixel(uint16_t x, uint16_t y, uint32_t color) {
     if (!framebuffer) return;
     if (x >= screenWidth || y >= screenHeight) return;
 
@@ -107,7 +108,7 @@ void vga_test_pattern() {
             uint32_t g = (y * 255) / screenHeight;
             uint32_t b = 128;
             uint32_t color = (0xFF << 24) | (r << 16) | (g << 8) | b;
-            vga_draw_pixel(x, y, color);
+            putpixel(x, y, color);
         }
     }
 }
@@ -136,7 +137,7 @@ void putchar(int x, int y, char c, const struct bitmap_font* font, uint32_t colo
         unsigned char row_bits = bitmap[row];
         for (int col = 0; col < width && col < 8; ++col) {
             if (row_bits & (1 << (7 - col))) {
-                vga_draw_pixel(x + col, y + row, color);
+                putpixel(x + col, y + row, color);
             }
         }
     }
@@ -168,6 +169,58 @@ void putstring(int x, int y, const char* str, const struct bitmap_font* font, ui
 
         cursor_x += char_width + 1;
     }
+}
+
+static void int_to_str(int value, char* buffer, int buffer_size) {
+    if (buffer_size <= 0) return;
+
+    int i = buffer_size - 1;
+    buffer[i] = '\0';
+    i--;
+
+    int is_negative = 0;
+    unsigned int uvalue;
+
+    if (value < 0) {
+        is_negative = 1;
+        uvalue = (unsigned int)(-value);
+    } else {
+        uvalue = (unsigned int)value;
+    }
+
+    if (uvalue == 0) {
+        if (i >= 0) {
+            buffer[i] = '0';
+            i--;
+        }
+    } else {
+        while (uvalue > 0 && i >= 0) {
+            buffer[i] = '0' + (uvalue % 10);
+            uvalue /= 10;
+            i--;
+        }
+    }
+
+    if (is_negative && i >= 0) {
+        buffer[i] = '-';
+        i--;
+    }
+
+    // Shift string to start of buffer
+    int start = i + 1;
+    int j = 0;
+    while (buffer[start] != '\0' && j < buffer_size) {
+        buffer[j] = buffer[start];
+        j++; start++;
+    }
+    buffer[j] = '\0';
+}
+
+// Print an integer at (x,y) in given color and font
+void putint(int x, int y, int value, const struct bitmap_font* font, uint32_t color) {
+    char buffer[12]; // Enough for 32-bit int plus sign and null terminator
+    int_to_str(value, buffer, sizeof(buffer));
+    putstring(x, y, buffer, font, color);
 }
 
 
@@ -203,11 +256,54 @@ void initvideo() {
 
     // Clear screen to black
 	for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
-        framebuffer[i] = black;
+        framebuffer[i] = blue;
     }
 	
-	//Draw dark blue background
 	for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
-		framebuffer[i] = blue;
-	}	
+		framebuffer[i] = red;
+	}
+	vga_test_pattern();
+	putstring(0, 12, "APRILoS", &font, white);
 }
+
+
+void exitvideo() {
+    if (!framebuffer) return;
+
+    // Disable VBE graphics mode
+    BgaWriteRegister(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
+
+    framebuffer = 0;
+    screenWidth = 0;
+    screenHeight = 0;
+}
+
+#define TEXT_MODE_FB ((volatile uint16_t*)0xB8000)
+#define TEXT_COLS 80
+#define TEXT_ROWS 25
+
+void clear_text_mode_screen(uint8_t attr) {
+    for (int i = 0; i < TEXT_COLS * TEXT_ROWS; i++) {
+        TEXT_MODE_FB[i] = (attr << 8) | ' ';
+    }
+}
+
+
+
+#define KEYBOARD_DATA_PORT 0x60
+#define KEY_A_PRESSED 0x1E
+
+void keyboard_poll() {
+    static int cursor_x = 100;
+    static int cursor_y = 100;
+
+    if (inb(0x64) & 1) { // Check if data is available
+        uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+
+        if (scancode == KEY_A_PRESSED) {
+            putchar(cursor_x, cursor_y, 'a', &font, white);
+            cursor_x += font.Width + 1;
+        }
+    }
+}
+

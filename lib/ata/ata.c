@@ -38,10 +38,6 @@ static void ata_flush() {
     ata_wait();
 }
 
-static void io_wait() {
-    outb(0x80, 0); // small delay
-}
-
 uint32_t hex_to_uint32(const char *hex) {
     uint32_t value = 0;
     while (*hex) {

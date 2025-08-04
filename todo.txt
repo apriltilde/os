@@ -1,5 +1,9 @@
 fix print
 setvar command
 more command options
--command file recognition
+more filesystem commands
 
+graphical side
+keyboard/mouse
+windows
+shell

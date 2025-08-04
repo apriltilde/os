@@ -1,7 +1,9 @@
 #include "../core/print.h"
 #include "../core/io.h"
 #include "clock.h"
+#include "../vga/vga.h"
 
+extern struct bitmap_font font;
 #define RTC_INDEX_PORT 0x70
 #define RTC_DATA_PORT  0x71
 
@@ -62,6 +64,7 @@ void print_time(void) {
 
     print(WHITE, "\n");
     print(WHITE, buf);
+	putstring(0, 20, buf, &font, white);
     print(WHITE, "\n");
 }
 

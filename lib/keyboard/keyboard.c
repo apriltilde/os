@@ -1,9 +1,13 @@
 #include "../core/print.h"
 #include "../core/io.h"
+#include "../vga/vga.h"
 #include "keyboard.h"// I/O ports for keyboard
+#include "../core/intr.h"
 
 #define KEYBOARD_PORT 0x60
 #define STATUS_PORT 0x64
+
+extern const struct bitmap_font font;
 
 static int shift_pressed = 0;      // Track if shift is pressed
 static int key_state[256] = {0};   // Track the state of each key
@@ -117,3 +121,5 @@ void keyboard_handler(void) {
         }
     }
 }
+
+

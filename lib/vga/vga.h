@@ -7,9 +7,15 @@
 #define green 0x00FF0000
 #define blue  0x0000FF00
 
+
+struct bitmap_font;
+
 void initvideo(void);
-void putpixel(int x, int y, uint32_t color);
-void putstring(int x, int y, char* str);
+void putpixel(uint16_t x, uint16_t y, uint32_t color);
+void putchar(int x, int y, char c, const struct bitmap_font* font, uint32_t color);
+void putstring(int x, int y, const char* str, const struct bitmap_font* font, uint32_t color);
+void putint(int x, int y, int value, const struct bitmap_font* font, uint32_t color);
 void test_graphics(void);
+void keyboard_poll(void);
 
 #endif
