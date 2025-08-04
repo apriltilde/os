@@ -36,6 +36,7 @@ int extract_arguments(const char *command, char args[][BUFFER_SIZE], int max_arg
 void help_command(void);
 void clear_command(void);
 void print_command(void);
+void graphicsmode_command(void);
 
 void peek_command(void);
 void poke_command(void);
@@ -72,6 +73,7 @@ static Command commands[] = {
     { "wipe", wipe_command, "disk" },
 	{ "fs", readfs_command, "disk" },
     { "create", addfs_command, "disk" },
+	{ "graphicsmode", graphicsmode_command, "graphics" }
 };
 
 
@@ -83,8 +85,10 @@ void cmd_init(void) {
 	//writebasicfs(); // DO THIS IF YOU FUCK IT ALL UP
     print(WHITE, "APRILos\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
-	initvideo(); 
-	//needs memory mapping to work i think
+}
+
+void graphicsmode_command(void) {
+	initvideo();
 }
 
 void addfs_command(void) {

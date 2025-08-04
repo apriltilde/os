@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include "../core/io.h"
+#include "font/font.h"
+#include "vga.h"
 
+extern const struct bitmap_font font;
 // Bochs VBE registers and constants
 #define PCI_CONFIG_ADDRESS 0xCF8
 #define PCI_CONFIG_DATA    0xCFC
@@ -37,6 +40,7 @@
 #define PCI_SLOT 0
 #define PCI_FUNC 0
 
+// Colors
 static inline void BgaWriteRegister(uint16_t index, uint16_t value) {
     outw(VBE_DISPI_IOPORT_INDEX, index);
     outw(VBE_DISPI_IOPORT_DATA, value);
@@ -107,6 +111,65 @@ void vga_test_pattern() {
         }
     }
 }
+void putchar(int x, int y, char c, const struct bitmap_font* font, uint32_t color) {
+    if (!font || !font->Bitmap || !font->Index) return;
+
+    unsigned char uc = (unsigned char)c;
+
+    // Find glyph index
+    int glyph_index = -1;
+    for (int i = 0; i < font->Chars; ++i) {
+        if (font->Index[i] == uc) {
+            glyph_index = i;
+            break;
+        }
+    }
+    if (glyph_index == -1) return;
+
+    int width = font->Widths ? font->Widths[glyph_index] : font->Width;
+    int height = font->Height;
+
+    const unsigned char* bitmap = &font->Bitmap[glyph_index * height];
+
+    // Draw from the bottom up, vertically aligned to baseline
+    for (int row = 0; row < height; ++row) {
+        unsigned char row_bits = bitmap[row];
+        for (int col = 0; col < width && col < 8; ++col) {
+            if (row_bits & (1 << (7 - col))) {
+                vga_draw_pixel(x + col, y + row, color);
+            }
+        }
+    }
+}
+
+
+void putstring(int x, int y, const char* str, const struct bitmap_font* font, uint32_t color) {
+    if (!str || !font) return;
+
+    int cursor_x = x;
+
+    while (*str) {
+        char c = *str++;
+
+        int glyph_index = -1;
+        for (int i = 0; i < font->Chars; ++i) {
+            if (font->Index[i] == (unsigned char)c) {
+                glyph_index = i;
+                break;
+            }
+        }
+
+        if (glyph_index == -1) continue;
+
+        int char_width = font->Widths ? font->Widths[glyph_index] : font->Width;
+
+        // Draw character, aligned to baseline
+		putchar(cursor_x, y - font->Height, c, font, color);
+
+        cursor_x += char_width + 1;
+    }
+}
+
 
 // Initialize Bochs VBE graphics mode 1024x768 32bpp
 void initvideo() {
@@ -138,12 +201,13 @@ void initvideo() {
     // Assign framebuffer pointer (identity mapped)
     framebuffer = (volatile uint32_t *)fb_address;
 
-    // Clear screen to blue (ARGB: 0xFF0000FF)
-    uint32_t blue = 0xFF0000FF;
-    for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
-        framebuffer[i] = blue;
+    // Clear screen to black
+	for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
+        framebuffer[i] = black;
     }
-
-    // Optional: Draw a simple test pattern
-    vga_test_pattern();
+	
+	//Draw dark blue background
+	for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
+		framebuffer[i] = blue;
+	}	
 }
