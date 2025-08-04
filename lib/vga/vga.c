@@ -3,6 +3,7 @@
 #include "font/font.h"
 #include "vga.h"
 #include "../clock/clock.h"
+#include "../core/datatypes.h"
 
 extern const struct bitmap_font font;
 // Bochs VBE registers and constants
@@ -264,46 +265,5 @@ void initvideo() {
 	}
 	vga_test_pattern();
 	putstring(0, 12, "APRILoS", &font, white);
-}
-
-
-void exitvideo() {
-    if (!framebuffer) return;
-
-    // Disable VBE graphics mode
-    BgaWriteRegister(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-
-    framebuffer = 0;
-    screenWidth = 0;
-    screenHeight = 0;
-}
-
-#define TEXT_MODE_FB ((volatile uint16_t*)0xB8000)
-#define TEXT_COLS 80
-#define TEXT_ROWS 25
-
-void clear_text_mode_screen(uint8_t attr) {
-    for (int i = 0; i < TEXT_COLS * TEXT_ROWS; i++) {
-        TEXT_MODE_FB[i] = (attr << 8) | ' ';
-    }
-}
-
-
-
-#define KEYBOARD_DATA_PORT 0x60
-#define KEY_A_PRESSED 0x1E
-
-void keyboard_poll() {
-    static int cursor_x = 100;
-    static int cursor_y = 100;
-
-    if (inb(0x64) & 1) { // Check if data is available
-        uint8_t scancode = inb(KEYBOARD_DATA_PORT);
-
-        if (scancode == KEY_A_PRESSED) {
-            putchar(cursor_x, cursor_y, 'a', &font, white);
-            cursor_x += font.Width + 1;
-        }
-    }
 }
 

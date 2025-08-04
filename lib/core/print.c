@@ -1,4 +1,8 @@
 #include "print.h"
+#include "../cmd.h"
+#include "../vga/vga.h"
+
+extern const struct bitmap_font font;
 
 #define VGA_ADDRESS 0xB8000       // Base address for VGA text mode
 #define VGA_WIDTH 80              // Number of columns
@@ -30,6 +34,13 @@ void scroll() {
 
 // Function to move the cursor to the next line
 void newline() {
+    if (in_graphics_mode == 1) {
+        // In graphics mode, move the cursor to the next line
+        gfx_cursor_x = cmd_x_start; // Reset to start of command area
+        gfx_cursor_y += font_char_height; // Move down one line
+        return;
+    }
+
     cursor_pos += VGA_WIDTH; // Move cursor to the start of the next line
 
     // Check if we have exceeded the screen height
@@ -52,6 +63,13 @@ void backspace() {
 
 // Function to print a single character
 void print_char(int color, char c) {
+    if (in_graphics_mode == 1) {
+        // In graphics mode, use the putchar function
+        putchar(gfx_cursor_x, gfx_cursor_y, c, &font, white);
+        gfx_cursor_x += font_char_width; // Move cursor position
+        return;
+    }
+
     if (c == '\0') return; // Ignore null characters
     if (c == '\n') {
         newline(); // Call the newline function
@@ -70,6 +88,12 @@ void print_char(int color, char c) {
 
 // Function to print a string with a specified color
 void print(int color, const char *str) {
+    if (in_graphics_mode == 1) {
+        // In graphics mode, use the putstring function
+        putstring(gfx_cursor_x, gfx_cursor_y, str, &font, white);
+        gfx_cursor_x += strlen(str) * font_char_width; // Update cursor position
+        return;
+    }
     while (*str) {
         print_char(color, *str++);
     }
