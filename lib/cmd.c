@@ -1,6 +1,7 @@
 #include "core/print.h"
 #include "core/io.h"
 #include "core/string.h"
+#include "core/datatypes.h"
 
 #include "cmd.h"
 
@@ -16,9 +17,6 @@
 
 
 #include <stdint.h>
-
-
-
 
 extern const struct bitmap_font font;
 
@@ -106,6 +104,9 @@ void cmd_init(void) {
 void graphicsmode_command(void) {
 	initvideo();
 	in_graphics_mode = 1;
+	buffer_index = 0;
+	redraw_screen();
+	newline();	
 }
 
 void print_command(void) {
@@ -132,9 +133,7 @@ void help_command(void) {
         const char* category = commands[i].category;
 
         if (last_category == 0 || !str_eq(category, last_category)) {
-            print(LIGHT_CYAN, "\n\n== ");
             print(LIGHT_CYAN, category);
-            print(LIGHT_CYAN, " ==\n");
             last_category = category;
         }
 
@@ -287,13 +286,13 @@ void cmd_handle_input(void) {
     // Call the keyboard handler to get the latest keystroke
     keyboard_handler();
     disable_cursor();
-
     // Using the globally defined last_char variable from keyboard.c
     extern char last_char;
 
     // If last_char is not null, process it
     if (last_char != '\0') {
         if (last_char == '\n') { // If Enter is pressed
+								 
             input_buffer[buffer_index] = '\0'; // Null-terminate the input buffer
 
             // Attempt to find and execute a matching command
@@ -304,6 +303,11 @@ void cmd_handle_input(void) {
                 unknown_command(); // Handle unknown command
             }
 
+			gfx_cursor_y = gfx_cursor_y + gfx_line_height;
+			gfx_cursor_x = cmd_x_start;			
+		
+
+
             buffer_index = 0; // Reset buffer index for next command
             print(LIGHT_RED, "$ "); // Print the prompt again
         } else if (last_char == '\b') { // If Backspace is pressed
@@ -311,12 +315,13 @@ void cmd_handle_input(void) {
                 buffer_index--; // Move buffer index back
                 input_buffer[buffer_index] = '\0'; // Null-terminate the buffer
 
-                // Overwrite the last character on the screen
                 print_char(WHITE, '\b'); // Move cursor back visually
                 print_char(WHITE, ' '); // Clear the last character visually
                 print_char(WHITE, '\b'); // Move cursor back again
             }
-        } else {
+        }
+	   
+		else {
             if (buffer_index < BUFFER_SIZE - 1) { // Avoid overflow
                 input_buffer[buffer_index++] = last_char; // Add character to buffer
                 input_buffer[buffer_index] = '\0'; // Null-terminate the buffer

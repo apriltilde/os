@@ -2,7 +2,6 @@
 #include "../core/io.h"
 #include "../vga/vga.h"
 #include "keyboard.h"// I/O ports for keyboard
-#include "../core/intr.h"
 
 #define KEYBOARD_PORT 0x60
 #define STATUS_PORT 0x64

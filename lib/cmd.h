@@ -7,17 +7,17 @@
 #define CMD_AREA_LINES 10
 
 static const int font_char_width = 8;
-static const int font_char_height = 16;
+static const int font_char_height = 12;
 
 static int in_graphics_mode = 0;
 
 // Command line area starting coordinates (centered)
-static const int cmd_x_start = (SCREEN_WIDTH - CMD_AREA_WIDTH) / 2; // 256
-static const int cmd_y_start = (SCREEN_HEIGHT / 2) - (CMD_AREA_LINES * font_char_height / 2); // roughly centered vertically
+static const int cmd_x_start = 50; 
+static const int cmd_y_start = 50; // roughly centered vertically
 
 // Cursor position for command input
-static int gfx_cursor_x = cmd_x_start;
-static int gfx_cursor_y = cmd_y_start;
+static int gfx_cursor_x = 50;
+static int gfx_cursor_y = 50;
 static int gfx_line_height = 12;
 
 

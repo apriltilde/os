@@ -172,57 +172,27 @@ void putstring(int x, int y, const char* str, const struct bitmap_font* font, ui
     }
 }
 
-static void int_to_str(int value, char* buffer, int buffer_size) {
-    if (buffer_size <= 0) return;
-
-    int i = buffer_size - 1;
-    buffer[i] = '\0';
-    i--;
-
-    int is_negative = 0;
-    unsigned int uvalue;
-
-    if (value < 0) {
-        is_negative = 1;
-        uvalue = (unsigned int)(-value);
-    } else {
-        uvalue = (unsigned int)value;
-    }
-
-    if (uvalue == 0) {
-        if (i >= 0) {
-            buffer[i] = '0';
-            i--;
-        }
-    } else {
-        while (uvalue > 0 && i >= 0) {
-            buffer[i] = '0' + (uvalue % 10);
-            uvalue /= 10;
-            i--;
-        }
-    }
-
-    if (is_negative && i >= 0) {
-        buffer[i] = '-';
-        i--;
-    }
-
-    // Shift string to start of buffer
-    int start = i + 1;
-    int j = 0;
-    while (buffer[start] != '\0' && j < buffer_size) {
-        buffer[j] = buffer[start];
-        j++; start++;
-    }
-    buffer[j] = '\0';
-}
-
 // Print an integer at (x,y) in given color and font
 void putint(int x, int y, int value, const struct bitmap_font* font, uint32_t color) {
     char buffer[12]; // Enough for 32-bit int plus sign and null terminator
     int_to_str(value, buffer, sizeof(buffer));
     putstring(x, y, buffer, font, color);
 }
+
+void delchar(int x, int y, const struct bitmap_font* font) {
+    if (!font) return;
+
+    int width = font->Width;
+    int height = font->Height;
+
+    // Draw a black rectangle over the character area
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            putpixel(x + col, y + row, 0x000000); // black color
+        }
+    }
+}
+
 
 
 // Initialize Bochs VBE graphics mode 1024x768 32bpp
@@ -263,7 +233,12 @@ void initvideo() {
 	for (uint32_t i = 0; i < screenWidth * screenHeight; i++) {
 		framebuffer[i] = red;
 	}
-	vga_test_pattern();
-	putstring(0, 12, "APRILoS", &font, white);
 }
 
+
+void redraw_screen() {
+	vga_test_pattern();
+	putstring(0, 12, "os", &font, white);
+	putstring(50, 70, "command line", &font, white);
+
+}

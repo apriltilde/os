@@ -3,6 +3,7 @@
 #include "rw.h"
 #include "../core/print.h"// for print, print_hex, print_char, hex_to_uint32, etc.
 #include "ata.h"   // for read_sector, write_sector, etc.
+#include "../vga/vga.h"
 
 #define BUFFER_SIZE 512
 #define SECTOR_SIZE 512
@@ -19,6 +20,7 @@ void readsec(void) {
         return;
     }
     clear();
+	redraw_screen();
     uint32_t sector = hex_to_uint32(args[0]);
     uint8_t* buffer = (uint8_t*)0x7E00;
 
