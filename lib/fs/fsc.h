@@ -3,5 +3,6 @@
 
 void readfsc_command(void);
 void addfsc_command(void);
+void delfsc_command(void);
 
 #endif

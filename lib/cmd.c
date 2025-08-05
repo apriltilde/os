@@ -60,9 +60,11 @@ void div_command(void);
 void write_command(void);
 void read_command(void);
 void wipe_command(void);
+void exec_command(void);
 
 void readfs_command(void);
 void addfs_command(void);
+void delfs_command(void);
 
 static Command commands[] = {
     { "help", help_command, "system" },
@@ -81,6 +83,8 @@ static Command commands[] = {
     { "wipe", wipe_command, "disk" },
 	{ "fs", readfs_command, "disk" },
     { "create", addfs_command, "disk" },
+    { "delete", delfs_command, "disk" },
+	{ "exec", exec_command, "system" },
 	{ "gui", graphicsmode_command, "graphics" }
 };
 
@@ -133,7 +137,9 @@ void help_command(void) {
         const char* category = commands[i].category;
 
         if (last_category == 0 || !str_eq(category, last_category)) {
+			print(WHITE, "[");
             print(LIGHT_CYAN, category);
+			print(WHITE, "] ");
             last_category = category;
         }
 
@@ -159,6 +165,8 @@ void unknown_command(void) {
 
 void addfs_command(void) { addfsc_command(); }
 
+void delfs_command(void) { delfsc_command(); }
+
 void readfs_command(void) { readfsc_command(); }
 
 void read_command(void) { readsec(); }
@@ -166,6 +174,8 @@ void read_command(void) { readsec(); }
 void write_command(void) { writesec(); }
 
 void wipe_command(void) { wipesec(); }
+
+void exec_command(void) { execsec(); }
 
 //Math
 void add_command(void); void sub_command(void); void mul_command(void); void div_command(void);

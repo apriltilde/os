@@ -238,7 +238,7 @@ void initvideo() {
 
 void redraw_screen() {
 	vga_test_pattern();
-	putstring(0, 12, "os", &font, white);
+	putstring(0, 12, "aprilOS", &font, white);
 	putstring(50, 70, "command line", &font, white);
 
 }

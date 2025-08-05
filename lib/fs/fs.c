@@ -86,6 +86,64 @@ void addfile(const char* filename, uint32_t data_sector) {
 }
 
 
+void delfile(const char* filename) {
+    uint8_t dir[512];
+    read_sector(dir, 1);
+
+    int i = 0;
+    int write_pos = 0;
+
+    while (i < 512 && dir[i] != 0) {
+        int entry_start = i;
+
+        // Extract name until '<'
+        char name[64];
+        int ni = 0;
+        while (i < 512 && dir[i] != '<' && ni < 63) {
+            name[ni++] = dir[i++];
+        }
+        name[ni] = 0;
+
+        // Skip '<'
+        if (i < 512 && dir[i] == '<') i++;
+        else break;
+
+        // Skip sector number until '>'
+        while (i < 512 && dir[i] != '>') i++;
+        if (i < 512 && dir[i] == '>') i++;
+        if (i < 512 && dir[i] == ';') i++;
+
+        int entry_end = i;
+
+        // Manual string compare: check if 'name' equals 'filename'
+        int match = 1;
+        int k = 0;
+        while (filename[k] != 0 || name[k] != 0) {
+            if (filename[k] != name[k]) {
+                match = 0;
+                break;
+            }
+            k++;
+        }
+
+        if (!match) {
+            // Copy this entry into the write_pos
+            for (int j = entry_start; j < entry_end && write_pos < 512; j++) {
+                dir[write_pos++] = dir[j];
+            }
+        }
+    }
+
+    // Zero out the rest of the buffer after write_pos
+    while (write_pos < 512) {
+        dir[write_pos++] = 0;
+    }
+
+    write_sector(dir, 1);
+}
+
+
+
 // Read the file data for given filename into out_buffer (512 bytes)
 void readfs(const char* filename, uint8_t* out_buffer) {
     uint8_t dir[512];

@@ -95,13 +95,14 @@ void print(int color, const char *str) {
     while (*str) {
         print_char(color, *str++);
     }
-	putstring(gfx_cursor_x, gfx_cursor_y, str, &font, white);
 	if (gfx_cursor_y > 300) {
 		gfx_cursor_y = 77;
 		gfx_cursor_x = cmd_x_start;
 		redraw_screen();
 
 	}
+
+	putstring(gfx_cursor_x, gfx_cursor_y, str, &font, white);
 }
 
 void print_hex(int color, uint16_t value) {

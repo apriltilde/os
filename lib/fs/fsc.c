@@ -44,12 +44,13 @@ void readfsc_command(void) {
 		if (arg_count > 0 && str_eq(args[0], ".num")) {
             print(WHITE, "<");
             print(WHITE, snum);
-            print(WHITE, "> | ");
+            print(WHITE, ">");
         }
         // Print output based on argument
         print(WHITE, name);
-        newline();
+		print(WHITE, " | ");
     }
+	newline();
 }
 
 void addfsc_command(void) {
@@ -114,3 +115,15 @@ void addfsc_command(void) {
     print(GREEN, "\nFile added successfully.\n");
 }
 
+void delfsc_command(void) {
+    char args[1][BUFFER_SIZE];
+    int arg_count = extract_arguments("delete", args, 1, BUFFER_SIZE);
+
+    if (arg_count < 1) {
+		print(WHITE, "\nUsage: delete <filename>\n");
+		return;
+    }
+
+    delfile(args[0]);
+    print(GREEN, "\nFile deleted successfully.\n");
+}

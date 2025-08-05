@@ -3,7 +3,7 @@ setvar command
 more command options
 more filesystem commands
 
-graphical side
-keyboard/mouse
-windows
-shell
+gui stuff
+pseudo windows
+updating time and date
+exit gui

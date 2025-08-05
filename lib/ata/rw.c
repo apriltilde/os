@@ -165,3 +165,15 @@ void var_extract(const char* var_name, char* output, int max_len) {
 }
 
 
+void execsec(void) {
+    char args[1][BUFFER_SIZE];
+    int count = extract_arguments("exec", args, 1, BUFFER_SIZE);
+
+    if (count != 1) {
+	print(WHITE, "\nUsage: exec <hex-sector>\n");
+	return;
+    }
+
+    uint32_t sector = hex_to_uint32(args[0]);
+    execute_sector(sector);
+}
