@@ -69,6 +69,11 @@ void backspace() {
 }
 
 // Function to print a single character
+void print(int color, const char *str) __attribute__((section(".print_func")));
+
+void print_char(int color, char c) __attribute__((section(".char_func")));
+
+
 void print_char(int color, char c) {
  	putchar(gfx_cursor_x, gfx_cursor_y, c, &font, white);
 	gfx_cursor_x += font_char_width;

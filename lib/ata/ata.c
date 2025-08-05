@@ -119,8 +119,6 @@ void write_sector(const uint8_t* buffer, uint32_t lba) {
 }
 
 
-
-
 #define LOAD_ADDR ((void*)0x1000)
 
 void execute_sector(uint32_t lba) {

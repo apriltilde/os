@@ -18,6 +18,7 @@ extern void disable_cursor(void);
 extern int extract_arguments(char* command, char args[][BUFFER_SIZE], int max_args, int max_len);
 extern char last_char;
 
+
 void edit(void) {
     char args[1][BUFFER_SIZE];
     int arg_count = extract_arguments("edit", args, 1, BUFFER_SIZE);
@@ -38,8 +39,8 @@ void edit(void) {
 
     last_char = '\0';
 
-    // Helper: find line start in buffer by line number (1-based).
-    // If line not found, returns pointer to end of buffer.
+    // Helper: find line start pointer by line number (1-based),
+    // or end of buffer if not enough lines.
     uint8_t* get_line_start(uint8_t* buf, int line_num) {
         int current_line = 1;
         uint8_t* p = buf;
@@ -57,12 +58,11 @@ void edit(void) {
             }
             p++;
         }
-
-        // If requested line is after the last line, return end of buffer
+        // If requested line past existing lines, return end of buffer
         return p;
     }
 
-    // Helper: find end of line starting at p (or end of buffer)
+    // Helper: find line end pointer (points to '\n' or null or buffer end)
     uint8_t* get_line_end(uint8_t* p) {
         while (*p != 0 && *p != '\n' && p < buffer + SECTOR_SIZE) {
             p++;
@@ -108,7 +108,7 @@ void edit(void) {
             return;
         }
 
-        // Parse line number at start of input line
+        // Parse line number from input line
         int line_num = 0;
         int i = 0;
         while (line[i] >= '0' && line[i] <= '9') {
@@ -116,39 +116,64 @@ void edit(void) {
             i++;
         }
 
-        // Skip spaces after number
-        while (line[i] == ' ') i++;
+        while (line[i] == ' ') i++; // skip spaces
 
-        // Ignore if no valid line number
         if (line_num <= 0) {
             print(WHITE, "Invalid line number.\n");
             continue;
         }
 
-        // Find where the new line should be written in buffer
+        // Calculate number of existing lines in buffer
+        int existing_lines = 1;
+        for (int k = 0; k < SECTOR_SIZE && buffer[k] != 0; k++) {
+            if (buffer[k] == '\n') existing_lines++;
+        }
+
+        // If editing a line beyond existing lines, fill empty lines first
+        if (line_num > existing_lines) {
+            // Calculate how many empty lines to add (line_num - existing_lines)
+            int empty_lines_to_add = line_num - existing_lines;
+
+            // Find end of current buffer content
+            int used_size = 0;
+            while (used_size < SECTOR_SIZE && buffer[used_size] != 0) used_size++;
+
+            // Each empty line is just a '\n' character
+            if (used_size + empty_lines_to_add >= SECTOR_SIZE) {
+                print(WHITE, "Not enough space to add empty lines.\n");
+                continue;
+            }
+
+            // Add empty lines at the end
+            for (int e = 0; e < empty_lines_to_add; e++) {
+                buffer[used_size++] = '\n';
+            }
+            // Null terminate if space left
+            if (used_size < SECTOR_SIZE) buffer[used_size] = 0;
+        }
+
+        // Now overwrite the line content at the target line_num
         uint8_t* line_start = get_line_start(buffer, line_num);
         uint8_t* line_end = get_line_end(line_start);
 
-        // Calculate length of new line content + newline
+        // Include the '\n' at end of current line if present
+        int old_line_len = (int)(line_end - line_start);
+        if (line_end < buffer + SECTOR_SIZE && *line_end == '\n') {
+            old_line_len++;
+            line_end++;
+        }
+
+        // Length of new line content plus newline char
         int new_line_len = 0;
         while (line[i + new_line_len] != '\0' && new_line_len < SECTOR_SIZE - 2) {
             new_line_len++;
         }
-        // +1 for newline character
-        new_line_len += 1;
+        new_line_len += 1; // for the '\n'
 
-        // Calculate old line length (including possible '\n')
-        int old_line_len = (int)(line_end - line_start);
-        if (line_end < buffer + SECTOR_SIZE && *line_end == '\n') {
-            old_line_len++; // include '\n'
-            line_end++;
-        }
-
-        // Calculate total used size of buffer
+        // Calculate used size of buffer again
         int used_size = 0;
         while (used_size < SECTOR_SIZE && buffer[used_size] != 0) used_size++;
 
-        // Calculate new size after replacement
         int new_used_size = used_size - old_line_len + new_line_len;
         if (new_used_size > SECTOR_SIZE) {
             print(WHITE, "Line too long to fit in buffer.\n");
@@ -158,35 +183,36 @@ void edit(void) {
         // Shift buffer content after old line to make room or close gap
         if (new_line_len != old_line_len) {
             if (new_line_len > old_line_len) {
-                // Need to move data forward (to right)
+                // move forward
                 for (int k = used_size - 1; k >= (line_end - buffer); k--) {
                     buffer[k + (new_line_len - old_line_len)] = buffer[k];
                 }
             } else {
-                // Move data backward (to left)
+                // move backward
                 for (int k = (line_end - buffer); k < used_size; k++) {
                     buffer[k - (old_line_len - new_line_len)] = buffer[k];
                 }
-                // Clear leftover bytes at the end
+                // Clear leftover bytes
                 for (int k = new_used_size; k < used_size; k++) {
                     buffer[k] = 0;
                 }
             }
         }
 
-        // Write new line content to buffer at line_start
+        // Write new content + newline
         int pos = 0;
         for (; pos < new_line_len - 1; pos++) {
             buffer[(line_start - buffer) + pos] = (uint8_t)line[i + pos];
         }
-        buffer[(line_start - buffer) + pos] = '\n'; // add newline terminator
+        buffer[(line_start - buffer) + pos] = '\n';
 
-        // Null terminate buffer if space available
+        // Null terminate if possible
         if (new_used_size < SECTOR_SIZE) {
             buffer[new_used_size] = 0;
         }
     }
 }
+
 
 
 void view(void) {
