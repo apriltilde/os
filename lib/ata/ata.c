@@ -124,7 +124,7 @@ void write_sector(const uint8_t* buffer, uint32_t lba) {
 #define LOAD_ADDR ((void*)0x1000)
 
 void execute_sector(uint32_t lba) {
-    read_sector((uint8_t*)LOAD_ADDR, lba);
-    void (*func_ptr)() = (void (*)())LOAD_ADDR;
-    func_ptr();  // Jump to code in memory
+    read_sector((uint8_t*)0x1000, lba);
+    void (*program)() = (void (*)())0x1000;
+    program();  // CPU jumps here
 }

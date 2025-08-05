@@ -70,3 +70,33 @@ void int_to_strmath(int num, char *str) {
     while (i > 0) str[j++] = temp[--i];
     str[j] = '\0';
 }
+
+int str_to_int(const char *str) {
+    int result = 0;
+    int sign = 1;
+    int i = 0;
+
+    // Skip whitespace
+    while (str[i] == ' ' || str[i] == '\t') {
+        i++;
+    }
+
+    // Handle sign
+    if (str[i] == '-') {
+        sign = -1;
+        i++;
+    } else if (str[i] == '+') {
+        i++;
+    }
+
+    // Convert digits
+    while (str[i] >= '0' && str[i] <= '9') {
+        result = result * 10 + (str[i] - '0');
+        i++;
+    }
+
+    return sign * result;
+}
+
+
+

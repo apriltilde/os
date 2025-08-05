@@ -14,14 +14,14 @@ gcc -m32 -ffreestanding -fno-stack-protector -c lib/vga/vga.c -o bin/vga.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/mem/map.c -o bin/map.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/vga/font/font.c -o bin/font.o
 gcc -m32 -ffreestanding -fno-stack-protector -c lib/core/datatypes.c -o bin/datatypes.o
-
+gcc -m32 -ffreestanding -fno-stack-protector -c lib/edit/edit.c -o bin/edit.o
 
 
 
 nasm -f elf32 boot.s -o bin/boot.o
 
 
-ld -m elf_i386 -T linker.ld -o kernel bin/boot.o bin/kernel.o bin/print.o bin/keyboard.o bin/cmd.o bin/clock.o bin/math.o bin/mem.o bin/ata.o bin/rw.o bin/string.o bin/fs.o bin/fsc.o bin/vga.o bin/map.o bin/font.o bin/datatypes.o
+ld -m elf_i386 -T linker.ld -o kernel bin/boot.o bin/kernel.o bin/print.o bin/keyboard.o bin/cmd.o bin/clock.o bin/math.o bin/mem.o bin/ata.o bin/rw.o bin/string.o bin/fs.o bin/fsc.o bin/vga.o bin/map.o bin/font.o bin/datatypes.o bin/edit.o
 mv kernel aprilos/boot
 grub-mkrescue -o april.iso aprilos/
 qemu-system-i386 -boot d -cdrom april.iso -m 256 -hda disk.img 

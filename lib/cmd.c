@@ -14,7 +14,7 @@
 #include "fs/fs.h"
 #include "fs/fsc.h"
 #include "vga/vga.h"
-
+#include "edit/edit.h"
 
 #include <stdint.h>
 
@@ -66,6 +66,9 @@ void readfs_command(void);
 void addfs_command(void);
 void delfs_command(void);
 
+void edit_command(void);
+void view_command(void);
+
 static Command commands[] = {
     { "help", help_command, "system" },
     { "clear", clear_command, "system" },
@@ -85,6 +88,8 @@ static Command commands[] = {
     { "create", addfs_command, "disk" },
     { "delete", delfs_command, "disk" },
 	{ "exec", exec_command, "system" },
+	{ "edit", edit_command, "edit" },
+	{ "view", view_command, "edit" },
 	{ "gui", graphicsmode_command, "graphics" }
 };
 
@@ -112,6 +117,10 @@ void graphicsmode_command(void) {
 	redraw_screen();
 	newline();	
 }
+
+void edit_command(void) { edit(); }
+
+void view_command(void) { view(); }
 
 void print_command(void) {
     char args[1][BUFFER_SIZE]; // Only expect 1 argument: the string to print
