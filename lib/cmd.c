@@ -69,6 +69,8 @@ void delfs_command(void);
 void edit_command(void);
 void view_command(void);
 
+void exit_command(void);
+
 static Command commands[] = {
     { "help", help_command, "system" },
     { "clear", clear_command, "system" },
@@ -90,7 +92,8 @@ static Command commands[] = {
 	{ "exec", exec_command, "system" },
 	{ "edit", edit_command, "edit" },
 	{ "view", view_command, "edit" },
-	{ "gui", graphicsmode_command, "graphics" }
+	{ "gui", graphicsmode_command, "graphics" },
+	{ "exit", exit_command, "graphics" }
 };
 
 
@@ -116,6 +119,15 @@ void graphicsmode_command(void) {
 	buffer_index = 0;
 	redraw_screen();
 	newline();	
+	vga_print_time();
+	vga_print_date();
+}
+
+void exit_command(void) { 
+	exitgraphics();
+	in_graphics_mode = 0;
+
+	cmd_init();
 }
 
 void edit_command(void) { edit(); }
@@ -304,6 +316,7 @@ int match_command(const char *cmd) {
 void cmd_handle_input(void) {
     // Call the keyboard handler to get the latest keystroke
     keyboard_handler();
+	vga_print_time();
     disable_cursor();
     // Using the globally defined last_char variable from keyboard.c
     extern char last_char;

@@ -26,5 +26,5 @@ void putint(int x, int y, int value, const struct bitmap_font* font, uint32_t co
 void delchar(int x, int y, const struct bitmap_font* font);
 void vga_test_pattern(void);
 void redraw_screen(void);
-
+void exitgraphics(void);
 #endif
