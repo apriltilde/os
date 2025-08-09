@@ -8,8 +8,12 @@
 #include "../fs/fs.h"
 #include "../ata/ata.h"
 
+#include "../vga/vga.h"
+
 #define BUFFER_SIZE 512
 #define SECTOR_SIZE 512
+
+extern struct bitmap_font font;
 
 extern char input_buffer[BUFFER_SIZE];
 extern int buffer_index;
@@ -22,7 +26,76 @@ extern char last_char;
 void edit(void) {
     char args[1][BUFFER_SIZE];
     int arg_count = extract_arguments("edit", args, 1, BUFFER_SIZE);
+    uint8_t buffer[SECTOR_SIZE];
 
+
+    void draw_buffer(void) {
+        int line_num = 1;
+        int pos = 0;
+        int screen_y = 20;
+
+int total_lines = 1;
+for (int k = 0; k < SECTOR_SIZE && buffer[k] != 0; k++) {
+    if (buffer[k] == '\n') total_lines++;
+}
+
+
+int paper_x = 400;
+int paper_y = 6;
+int paper_width = 300;    // same as before
+int paper_height = total_lines * 12;   // same as before
+
+// Fill background white
+for (int i = 0; i < paper_width; i++) {
+    for (int j = 0; j < paper_height; j++) {
+        putpixel(paper_x + i, paper_y + j, white);
+    }
+}
+
+// Draw horizontal black lines for each text row
+// Assuming each row spacing = font.height * 2 (one blank line between)
+int line_spacing =  12;
+for (int y = paper_y + line_spacing; y < paper_y + paper_height; y += line_spacing) {
+    for (int x = paper_x; x < paper_x + paper_width; x++) {
+        putpixel(x, y, black);
+    }
+}
+
+// Draw vertical red margin line after line numbers
+// Example: place it at +40px from left edge of paper
+int margin_x = paper_x + 12;
+for (int y = paper_y; y < paper_y + paper_height; y++) {
+    putpixel(margin_x, y, red);
+}
+        while (pos < SECTOR_SIZE && buffer[pos] != 0) {
+            // Prepare a temporary string for line text
+            char line_str[BUFFER_SIZE];
+            int line_len = 0;
+
+            while (pos < SECTOR_SIZE && buffer[pos] != 0 && buffer[pos] != '\n') {
+                line_str[line_len++] = (char)buffer[pos];
+                pos++;
+            }
+            line_str[line_len] = '\0';
+
+            // Draw line number
+            putint(400, screen_y, line_num, &font, black);
+
+            // Draw line text starting a bit to the right
+            putstring(420, screen_y, line_str, &font, black);
+
+            // Move down two "lines" in screen coordinates
+            screen_y += 12;
+
+
+            // Skip the newline char if present
+            if (pos < SECTOR_SIZE && buffer[pos] == '\n') {
+                pos++;
+            }
+
+            line_num++;
+        }
+    }
     if (arg_count == 0) {
         print(WHITE, "\nUsage: edit <sector|/filename>\n");
         return;
@@ -30,8 +103,8 @@ void edit(void) {
 
     uint32_t sector = str_to_int(args[0]);
 
-    uint8_t buffer[SECTOR_SIZE];
     read_sector(buffer, sector);
+	draw_buffer();
 
     print(WHITE, "\n[Editing sector ");
     print(WHITE, args[0]);
@@ -39,8 +112,11 @@ void edit(void) {
 
     last_char = '\0';
 
-    // Helper: find line start pointer by line number (1-based),
-    // or end of buffer if not enough lines.
+    // --- helper to draw entire buffer ---
+
+    // --- end helper ---
+
+    // Helper: find line start pointer by line number (1-based)
     uint8_t* get_line_start(uint8_t* buf, int line_num) {
         int current_line = 1;
         uint8_t* p = buf;
@@ -58,11 +134,10 @@ void edit(void) {
             }
             p++;
         }
-        // If requested line past existing lines, return end of buffer
         return p;
     }
 
-    // Helper: find line end pointer (points to '\n' or null or buffer end)
+    // Helper: find line end pointer
     uint8_t* get_line_end(uint8_t* p) {
         while (*p != 0 && *p != '\n' && p < buffer + SECTOR_SIZE) {
             p++;
@@ -108,69 +183,59 @@ void edit(void) {
             return;
         }
 
-        // Parse line number from input line
+        // Parse line number
         int line_num = 0;
         int i = 0;
         while (line[i] >= '0' && line[i] <= '9') {
             line_num = line_num * 10 + (line[i] - '0');
             i++;
         }
-
-        while (line[i] == ' ') i++; // skip spaces
+        while (line[i] == ' ') i++;
 
         if (line_num <= 0) {
             print(WHITE, "Invalid line number.\n");
             continue;
         }
 
-        // Calculate number of existing lines in buffer
+        // Count existing lines
         int existing_lines = 1;
         for (int k = 0; k < SECTOR_SIZE && buffer[k] != 0; k++) {
             if (buffer[k] == '\n') existing_lines++;
         }
 
-        // If editing a line beyond existing lines, fill empty lines first
+        // Fill missing lines if needed
         if (line_num > existing_lines) {
-            // Calculate how many empty lines to add (line_num - existing_lines)
             int empty_lines_to_add = line_num - existing_lines;
-
-            // Find end of current buffer content
             int used_size = 0;
             while (used_size < SECTOR_SIZE && buffer[used_size] != 0) used_size++;
 
-            // Each empty line is just a '\n' character
             if (used_size + empty_lines_to_add >= SECTOR_SIZE) {
                 print(WHITE, "Not enough space to add empty lines.\n");
                 continue;
             }
 
-            // Add empty lines at the end
             for (int e = 0; e < empty_lines_to_add; e++) {
                 buffer[used_size++] = '\n';
             }
-            // Null terminate if space left
             if (used_size < SECTOR_SIZE) buffer[used_size] = 0;
         }
 
-        // Now overwrite the line content at the target line_num
+        // Edit the selected line
         uint8_t* line_start = get_line_start(buffer, line_num);
         uint8_t* line_end = get_line_end(line_start);
 
-        // Include the '\n' at end of current line if present
         int old_line_len = (int)(line_end - line_start);
         if (line_end < buffer + SECTOR_SIZE && *line_end == '\n') {
             old_line_len++;
             line_end++;
         }
 
-        // Length of new line content plus newline char
         int new_line_len = 0;
         while (line[i + new_line_len] != '\0' && new_line_len < SECTOR_SIZE - 2) {
             new_line_len++;
         }
-        new_line_len += 1; // for the '\n'
+        new_line_len += 1;
 
-        // Calculate used size of buffer again
         int used_size = 0;
         while (used_size < SECTOR_SIZE && buffer[used_size] != 0) used_size++;
 
@@ -180,38 +245,37 @@ void edit(void) {
             continue;
         }
 
-        // Shift buffer content after old line to make room or close gap
         if (new_line_len != old_line_len) {
             if (new_line_len > old_line_len) {
-                // move forward
                 for (int k = used_size - 1; k >= (line_end - buffer); k--) {
                     buffer[k + (new_line_len - old_line_len)] = buffer[k];
                 }
             } else {
-                // move backward
                 for (int k = (line_end - buffer); k < used_size; k++) {
                     buffer[k - (old_line_len - new_line_len)] = buffer[k];
                 }
-                // Clear leftover bytes
                 for (int k = new_used_size; k < used_size; k++) {
                     buffer[k] = 0;
                 }
             }
         }
 
-        // Write new content + newline
         int pos = 0;
         for (; pos < new_line_len - 1; pos++) {
             buffer[(line_start - buffer) + pos] = (uint8_t)line[i + pos];
         }
         buffer[(line_start - buffer) + pos] = '\n';
 
-        // Null terminate if possible
         if (new_used_size < SECTOR_SIZE) {
             buffer[new_used_size] = 0;
         }
+
+        // ✅ Refresh the on-screen file view
+        draw_buffer();
     }
 }
+
+
 
 
 

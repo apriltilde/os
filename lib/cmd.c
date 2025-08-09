@@ -109,7 +109,7 @@ extern void init_gdt(void);
 void cmd_init(void) {
     buffer_index = 0; // Initialize buffer index
 	//writebasicfs(); // DO THIS IF YOU FUCK IT ALL UP
-    print(WHITE, "APRILoS\n"); // Display a message on the screen
+    print(GREEN, "APRILoS\n"); // Display a message on the screen
     print(LIGHT_RED, "$ "); // Print the initial prompt
 }
 
@@ -120,7 +120,7 @@ void graphicsmode_command(void) {
 	redraw_screen();
 	newline();	
 	vga_print_time();
-	vga_print_date();
+	vga_print_date(1);
 }
 
 void exit_command(void) { 
@@ -158,6 +158,7 @@ void help_command(void) {
         const char* category = commands[i].category;
 
         if (last_category == 0 || !str_eq(category, last_category)) {
+			print(WHITE, "\n");
 			print(WHITE, "[");
             print(LIGHT_CYAN, category);
 			print(WHITE, "] ");

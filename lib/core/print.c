@@ -100,7 +100,7 @@ void print(int color, const char *str) {
     while (*str) {
         print_char(color, *str++);
     }
-	if (gfx_cursor_y > 300) {
+	if (gfx_cursor_y > 700) {
 		gfx_cursor_y = 77;
 		gfx_cursor_x = cmd_x_start;
 		redraw_screen();

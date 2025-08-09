@@ -1,9 +1,10 @@
 fix print
-setvar command
+var command
 more command options
 more filesystem commands
 
 gui stuff
-pseudo windows
-updating time and date
-exit gui
+exit gui - halfway done
+gui colours
+
+assembler

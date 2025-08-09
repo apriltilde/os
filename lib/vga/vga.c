@@ -238,34 +238,35 @@ void initvideo() {
 
 void redraw_screen() {
 	vga_test_pattern();
-	putstring(0, 12, "aprilOS", &font, white);
+	putstring(0, 12, "aprilOS", &font, green);
 	putstring(50, 70, "command line", &font, white);
     vga_print_time();
-	vga_print_date();
+	vga_print_date(1);
 }
 
 
 void exitgraphics() {
-
-
     // Disable Bochs VBE
     BgaWriteRegister(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
 
     // Set Misc Output Register for standard VGA text mode 3
+    // 0x67 = 0b01100111
+    // Bit 0: IO Address Select (1 = 0x3D4/3D5, 0 = 0x3B4/3B5)
+    // Bit 1: Enable RAM (1)
+    // Bit 2: Clock Select (0 for 25 MHz pixel clock, needed for text mode)
+    // Bits 3-7: Misc settings
     outb(0x3C2, 0x67);
 
-    // Sequencer Registers for mode 3
+    // Sequencer registers for text mode 3
     static const uint8_t seq_regs[5] = {0x03, 0x01, 0x0F, 0x00, 0x0E};
     for (int i = 0; i < 5; i++) {
         outb(0x3C4, i);
         outb(0x3C5, seq_regs[i]);
     }
 
-    // Unlock CRTC registers
-    outb(0x3D4, 0x03);
-    outb(0x3D5, inb(0x3D5) | 0x80); // set bit 7 to unlock
+    // Unlock CRTC registers by clearing bit 7 of register 0x11
     outb(0x3D4, 0x11);
-    outb(0x3D5, inb(0x3D5) & ~0x80); // clear bit 7 to unlock
+    outb(0x3D5, inb(0x3D5) & ~0x80);
 
     // CRT Controller Registers (80x25 text mode standard values)
     static const uint8_t crtc_regs[25] = {
@@ -319,8 +320,8 @@ void exitgraphics() {
 
     // Clear VGA text buffer
     volatile uint16_t* textmem = (uint16_t*)0xB8000;
-    for (int i = 0; i < 80*25; i++) {
+    for (int i = 0; i < 80 * 25; i++) {
         textmem[i] = (0x07 << 8) | ' ';
     }
 }
-
+ 

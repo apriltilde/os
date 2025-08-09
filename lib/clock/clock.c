@@ -113,14 +113,16 @@ void print_date(void) {
 }
 
 
-void vga_print_date(void) {
+void vga_print_date(int forceupdate) {
     static int last_y = -1, last_m = -1, last_d = -1; // store last printed date
 
     int y, m, d;
     read_rtc_date(&y, &m, &d);
-
+	
     // Only update if the date changed
-    if (y == last_y && m == last_m && d == last_d) {
+    if (y == last_y && m == last_m && d == last_d && forceupdate == 0) {
+
+
         return;
     }
 
@@ -191,7 +193,7 @@ void vga_print_time(void) {
     // Increment counter for date updates
     call_count++;
     if (call_count >= 10) {
-        vga_print_date(); // this already only updates once per day
+        vga_print_date(0); // this already only updates once per day
         call_count = 0;
     }
 }

@@ -1,18 +1,11 @@
 #ifndef VGA_H
 #define VGA_H
 
-#define black 0x00000000
 #define white 0xFFFFFFFF
-#define red   0xFF000000
-#define green 0x00FF0000
-#define blue  0x0000FF00
-#define yellow 0xFFFF0000
-#define magenta 0xFF00FF00
-#define cyan 0x0000FFFF
-#define light_gray 0xFFC0C0C0
-#define light_red 0xFFFFC0C0
-#define light_green 0xC0FFC0C0
-#define light_cyan 0xC0C0FFFF
+#define green 0xFF00FF00 
+#define red   0xFFFF0000 
+#define blue  0xFF0000FF 
+#define black 0x00000000
 
 
 
