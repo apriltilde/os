@@ -117,6 +117,7 @@ void graphicsmode_command(void) {
 	initvideo();
 	in_graphics_mode = 1;
 	buffer_index = 0;
+	clear();
 	redraw_screen();
 	newline();	
 	vga_print_time();
